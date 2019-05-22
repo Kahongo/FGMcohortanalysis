@@ -7,7 +7,9 @@
 # written by Kathrin Weny
 
 # File description, purpose of code, inputs and output --------------------
-# This code creates a cross-sectional data sets of all DHS with FGM self-reported data. 
+
+# This code creates a cross-sectional data sets of all DHS with FGM reported by mothers 
+# with respect to their daugthers. 
 # Reads in the data, filters for the relevant indicators: 
 # clustering and stratification due to the survey design,
 # age (single years, year of birth and age group), residence (rural/urban), knowledge about FGM,
@@ -16,7 +18,7 @@
 
 # the code only includes datasets with FGM status and age-at-FGM.
 
-# The output of this codes is the df_DHS data frame with all cross-sectional DHS FGM data 
+# The output of this codes is the df_MICSd data frame with all cross-sectional MICS FGM data 
 
 # The data has been downloaded from https://dhsprogram.com/data/
 # ICF International. 1990-2018.
@@ -24,7 +26,7 @@
 
 # Working directory
 
-setwd("G:/My Drive/2018/FGM/02 -Trend modelling/01- Data/DHS")
+setwd("G:/My Drive/2018/FGM/02 -Trend modelling/01- Data/DHS/daugthers")
 
 listsav <- dir(pattern = "*.SAV")
 
@@ -36,1019 +38,276 @@ population <- read.csv("population.csv")
 
 # Create empty data frame to store data -----------------------------------
 
-df_DHS <- data.frame(matrix(NA, nrow = 0, ncol = 29))
+df_DHSd <- data.frame(matrix(NA, nrow = 0, ncol = 29))
 
 # Start loop through all DHS ----------------------------------------------
 
-for(i in 1:length(listsav)){ 
-  # Read in data ----------------------------------------------------------
+for (i in 1:length(listsav)){ 
   
-  tmp <- ReadSingleSAV(i)
-  a <- as.data.frame(attr(tmp, "variable.labels"))
-  
-  # Extract countries and DHS phases (wave I - VII) ------------------------
-  if(i == 16){ # convert to Greogrian calendar
-    tmp$vg008 <-  tmp$V008+92
-    tmp$vg007 <- floor((tmp$vg008-1)/12)
-    tmp$vg006 <- tmp$vg008-12*tmp$V007
-    tmp$V007 <- tmp$vg007+1900
-    
-    tmp$vg008 <-  tmp$V011+92
-    tmp$vg007 <- floor((tmp$vg008-1)/12)
-    tmp$vg006 <- tmp$vg008-12*tmp$V010
-    tmp$V010 <- tmp$vg007+1900
+  # if limited memory only read in one DHS stat file at a time
+  wide <- ReadSingleSAV(i) 
+  a <- as.data.frame(attr(wide, "variable.labels"))
+  # wide <- read.dta("burkina_faso.DTA", convert.factors = FALSE)
+  if(i ==6){ #convert to Gregorian calendar for Ethiopia (i ==6)
+    wide$vg008 <-  wide$V008+92
+    wide$vg007 <- floor((wide$vg008-1)/12)
+    wide$vg006 <- wide$vg008-12*wide$V007
+    wide$V007 <- wide$vg007+1900
   }
   
-  if (i != 41 & i != 15){ # i = 40 Tanzania 1996 and i = 15 Egypt 2015 - non standard DHS surveys
-    tmp$country <- substr(as.character(tmp$V000), 0, 2)
-    tmp$wave <- substr(tmp$V000, 3, 3)
-  } 
+  # select variables and create dataset for birth reshape and FGM reshape
+  wide_allchildren <- wide %>%
+    dplyr::select(c("CASEID",
+                    "V000",                         # country code and phase
+                    "V001","V002",                  # cluster and household number
+                    "V007","V008",                  # year of interView, Date of interview (CMC)
+                    "V005","V021","V022","V023",    # sample design
+                    "V024","V025",                  # region and place of residence (rural/urban)
+                    "G100", "G101",
+                    "BIDX.01","BIDX.02","BIDX.03","BIDX.04","BIDX.05","BIDX.06","BIDX.07","BIDX.08","BIDX.09","BIDX.10","BIDX.11","BIDX.12","BIDX.13","BIDX.14","BIDX.15","BIDX.16","BIDX.17","BIDX.18","BIDX.19","BIDX.20",
+                    "B4.01","B4.02","B4.03","B4.04","B4.05","B4.06","B4.07","B4.08","B4.09","B4.10","B4.11","B4.12","B4.13","B4.14","B4.15","B4.16","B4.17","B4.18","B4.19","B4.20",  # sex of child
+                    "B5.01","B5.02","B5.03","B5.04","B5.05","B5.06","B5.07","B5.08","B5.09","B5.10","B5.11","B5.12","B5.13","B5.14","B5.15","B5.16","B5.17","B5.18","B5.19","B5.20",
+                    "B2.01","B2.02","B2.03","B2.04","B2.05","B2.06","B2.07","B2.08","B2.09","B2.10","B2.11","B2.12","B2.13","B2.14","B2.15","B2.16","B2.17","B2.18","B2.19","B2.20",  # year of Birth
+                    "B8.01","B8.02","B8.03","B8.04","B8.05","B8.06","B8.07","B8.08","B8.09","B8.10","B8.11","B8.12","B8.13","B8.14","B8.15","B8.16","B8.17","B8.18","B8.19","B8.20",
+                    "B3.01","B3.02","B3.03","B3.04","B3.05","B3.06","B3.07","B3.08","B3.09","B3.10","B3.11","B3.12","B3.13","B3.14","B3.15","B3.16","B3.17","B3.18","B3.19","B3.20")) # age of child (CMC)
   
-  if(i == 15){ # Egypt 2015 coded totally different - lack the country column
-    tmp$country <- "Egypt"
+  wide_fgm <- wide %>%
+    dplyr::select(c("CASEID", 
+                    "GIDX.01","GIDX.02","GIDX.03","GIDX.04","GIDX.05","GIDX.06","GIDX.07","GIDX.08","GIDX.09","GIDX.10","GIDX.11","GIDX.12","GIDX.13","GIDX.14","GIDX.15","GIDX.16","GIDX.17","GIDX.18","GIDX.19","GIDX.20", 
+                    "G121.01","G121.02","G121.03","G121.04","G121.05","G121.06","G121.07","G121.08","G121.09","G121.10","G121.11","G121.12","G121.13","G121.14","G121.15","G121.16","G121.17","G121.18","G121.19","G121.20",  # FGM status
+                    "G122.01","G122.02","G122.03","G122.04","G122.05","G122.06","G122.07","G122.08","G122.09","G122.10","G122.11","G122.12","G122.13","G122.14","G122.15","G122.16","G122.17","G122.18","G122.19","G122.20")) # year of cutting
+  
+  # reshape FGM module
+  long_fgm <- reshape(wide_fgm, varying = c(2:61), direction = "long", idvar = "CASEID", sep = ".", timevar = "order")
+  long_fgm <- long_fgm %>%
+    filter(!is.na(GIDX))
+  # create ID for merge
+  long_fgm <- long_fgm %>%
+    mutate(id.match = paste(CASEID, GIDX, sep = ""))
+  
+  # reshape ALL CHILDREN
+  long_allchildren <- reshape(wide_allchildren, varying = c(15:134), direction = "long", idvar = "CASEID", sep = ".", timevar="order")
+  long_allchildren <- long_allchildren %>%
+    filter(!is.na(BIDX))
+  
+  # create ID for merge
+  long_allchildren <- long_allchildren %>%
+    mutate(id.match = paste(CASEID, BIDX, sep = "")) 
+  
+  
+  if(i ==6){ # convert to Gregorian calendar for Ethiopia (i==6)
+    long_allchildren$vg008 <-    long_allchildren$B3+92 # V011: Date of birth (CMC)
+    long_allchildren$vg007 <-    floor(( long_allchildren$vg008-1)/12)
+    long_allchildren$vg006 <-    long_allchildren$vg008-12* long_allchildren$B2 # V010: Respondent's year of birth
+    long_allchildren$B2    <-    long_allchildren$vg007+1900
   }
   
-  if(i == 41){ # Tanzania 1996 is coded differently and variable are code v instead of Vm R unfortunately is case sensitive
-    tmp$country <- substr(as.character(tmp$v000), 0, 2)
-    tmp$wave <- substr(tmp$v000, 3, 3)
+  # merge data sets
+  df <- merge(long_fgm, long_allchildren, by = "id.match")
+  
+  df <- df %>%
+    filter(as.numeric(as.character(B8)) < 15) %>% # only include daugthers under 15
+    select(c("V000", "V001", "V002", "V005", "V007", "V008", "V021", "V022", "V023", "V024",
+             "V025", "B4", "B2", "B8", "B3", "G121", "G122", "G100", "G101")) 
+  
+  
+  if(!all(is.na(long_allchildren$G101))){
+    long_allchildren$G100 <- ifelse(as.numeric(long_allchildren$G101) == 2 | as.numeric(long_allchildren$G100) == 2, 
+                                    2, long_allchildren$G100)
   }
   
-  # Egypt 2015 --------------------------------------------------------------
-  # non-standard DHS survey and its own thing: https://userforum.dhsprogram.com/index.php?t=msg&goto=14324&S=Google
-  if (tmp$country[1] == "Egypt"){ # dataset does not contain country column
-    
-    # Select variables from combined data file
-    tmp <- tmp %>%
-      dplyr::select(c("country", "A110C","AGEND",                              # country, age (continous and group)
-                      "AINTY",                                                 # year of interview
-                      "A109Y",                                                 # year of birth
-                      "CRELAT" ,"HNUMBER","WEIGHT","HPSU","CRESP","ATEAM", # sample design
-                      "ATYPE",                                                 # rural/urban
-                      "AGOVERN",                                               # governorate, needed for recreation of strata
-                      "A508",                                                  # knowledge of FGM
-                      "A503",                                                  # FGM or not
-                      "A504",                                                  # age at FGM
-                      "A511"))                                                 # approval/disapproval of FGM
-    
-    # rename columns
-    names(tmp) <- c("country", "age_years", "age_groups",
-                    "year", 
-                    "year_birth",
-                    "cluster_number", "hh_number", "wgt", "prim_samp_unit", "strata", "stratification",
-                    "residence", "region",
-                    "fgm_know", 
-                    "fgm",
-                    "fgm_age",
-                    "support")
-    
-    test <- tmp %>%
-      filter(fgm == "No")
-    
-    # Create stratification: https://userforum.dhsprogram.com/index.php?t=tree&th=4622&goto=8481&S=39796439d8b4cca149d1e3c9b2778a7f#page_top
-    tmp$strata <- paste(tmp$residence,tmp$governorate)
-    tmp$year_birth <- as.numeric(as.character(tmp$year_birth))
-    
-    # set columns with missing data to NA
-    tmp$cluster_number <- NA
-    tmp$stratification <- NA
-  } 
+  # non FGM birth recode
+  long_allchildren <- long_allchildren %>%
+    filter(as.numeric(G100) == 1 ) %>%
+    filter(as.numeric(B4) == 2) %>%
+    filter(as.numeric(B5) == 2) %>%
+    filter(as.numeric(B8) < 15) %>%
+    mutate(G121 = "No") %>%
+    mutate(G122 = NA) %>%
+    select(c("V000", "V001", "V002", "V005", "V007", "V008", "V021", "V022", "V023", "V024",
+             "V025", "B4", "B2", "B8", "B3", "G121", "G122", "G100", "G101")) 
   
-  # DHS wave 2: 1988-1993 - approximate date --------------------------------
-  # No datasets with FGM data
-  # DHS wave 3: 1992-1997 - approximate date --------------------------------
-  if (!is.null(tmp$wave)){ # code needs to jump over this section if data was already processed and wave no longer exists as column
-    test <- c(tmp$wave == 3)[1] # select countries in the third wave
-    if (test == TRUE) {
-      if (tmp$country[1] == "KE"){ # Kenya 1998
-        
-        name <- tmp$country[1]
-        
-        #Select variables
-        tmp <- tmp %>%
-          dplyr::select(c("country", "V012","V013",                   
-                          "V007",
-                          "V010",
-                          "V001" ,"V002","V005","V021","V022","V023",  
-                          "V025",
-                          "V024",
-                          "S1001",  # FGM 'in community', not have you heard of FGM, placeholder                                     
-                          "S1002",
-                          "S1003",
-                          "S1012"))                         
-        
-        # rename
-        names(tmp) <- c("country", "age_years", "age_groups",
-                        "year", 
-                        "year_birth",
-                        "cluster_number", "hh_number", "wgt", "prim_samp_unit", "strata", "stratification",
-                        "residence", "region",
-                        "fgm_know", 
-                        "fgm",
-                        "fgm_age",
-                        "support")
-        tmp$year_birth <- paste(19,tmp$year_birth, sep="")
-        tmp$year_birth <- as.numeric(tmp$year_birth)
-        tmp$fgm_know <- NA
-      }
-      
-      if (tmp$country[1] == "GN"){ # Guinea 1998-1999
-        
-        name <- tmp$country[1]
-        
-        #Select variables
-        tmp <- tmp %>%
-          dplyr::select(c("country", "V012","V013",                   
-                          "V007",
-                          "V010",
-                          "V001" ,"V002","V005","V021","V022","V023",  
-                          "V025",
-                          "V024",
-                          "V901",        # no probing questions, 'heard of FGM' only asked once                              
-                          "V902",
-                          "V906",
-                          "V922"))                                     
-        
-        # rename
-        names(tmp) <- c("country", "age_years", "age_groups",
-                        "year", 
-                        "year_birth",
-                        "cluster_number", "hh_number", "wgt", "prim_samp_unit", "strata", "stratification",
-                        "residence", "region",
-                        "fgm_know", 
-                        "fgm",
-                        "fgm_age",
-                        "support")
-        
-        tmp$year_birth <- paste(19,tmp$year_birth, sep="")
-        tmp$year_birth <- as.numeric(tmp$year_birth)
-      }
-      if (tmp$country[1] == "TZ"){ # Tanzania 1996
-        
-        name <- tmp$country[1]
-        
-        # Select variables
-        tmp <- tmp %>%
-          dplyr::select(c("country", "v012","v013",                    
-                          "v007",
-                          "v010",
-                          "v001" ,"v002","v005","v021","v022","v023",  
-                          "v025", "v024",
-                          "v105",                                      # placeholder, no knowledge of fGM, women circumcised in the area
-                          "s1003",
-                          "s1004",
-                          "v004"))                                     # placeholder, no data for approval
-        
-        tmp$s1003 <- ifelse(tmp$s1003 == "Never circumcised", 0, 
-                            ifelse(is.na(tmp$s1003), NA, 1))
-        
-        # rename
-        names(tmp) <- c("country", "age_years", "age_groups",
-                        "year", 
-                        "year_birth",
-                        "cluster_number", "hh_number", "wgt", "prim_samp_unit", "strata", "stratification",
-                        "residence", "region",
-                        "fgm_know", 
-                        "fgm",
-                        "fgm_age",
-                        "support")
-        
-        # set missing variables to NA
-        tmp$fgm_know <- NA
-        tmp$support  <- NA
-        tmp$year_birth <- paste(19,tmp$year_birth, sep="")
-        tmp$year_birth <- as.numeric(tmp$year_birth)
-      }
-      if (tmp$country[1] == "BF"){ # Burkina Faso 1999
-        
-        name <- tmp$country[1]
-        
-        # Select variables
-        tmp <- tmp %>%
-          dplyr::select(c("country", "V012","V013",                    
-                          "V007",
-                          "V010",
-                          "V001" ,"V002","V005","V021","V022","V023",  
-                          "V025", "V024",                                    
-                          "S901",      # no probing question asked, however asked "knows of FGM"                                
-                          "S903",
-                          "S904",
-                          "S916"))                                     
-        
-        # Recode S903 variables, as nonesense in data
-        tmp$S903 <- ifelse(tmp$S903 == "Not circumcised", 0, ifelse(is.na(tmp$S903), NA, 1))
-        
-        # rename
-        names(tmp) <- c("country", "age_years", "age_groups",
-                        "year", 
-                        "year_birth",
-                        "cluster_number", "hh_number", "wgt", "prim_samp_unit", "strata", "stratification",
-                        "residence", "region",
-                        "fgm_know", 
-                        "fgm",
-                        "fgm_age",
-                        "support")
-        tmp$year_birth <- paste(19,tmp$year_birth, sep="")
-        tmp$year_birth <- as.numeric(as.character(tmp$year_birth))
-        
-      }
-      if (tmp$country[1] == "CF"){ # Central African Republic 1994-1995
-        
-        name <- tmp$country[1]
-        
-        tmp <- tmp %>%
-          filter(SPREF != "Vakaga") # Vakaga was exluded in subsequent surveys and also needs to be excluded here
-        
-        # Select variables
-        tmp <- tmp %>%
-          dplyr::select(c("country", "V012","V013",                    
-                          "V007",
-                          "V010",
-                          "V001" ,"V002","V005","V021","V022","V023",  
-                          "V025", "V024",                              
-                          "V004",                                      # placeholder, there is no data on if every heard of FGM
-                          "S1001", 
-                          "S1002",
-                          "S1005"))                                    
-        
-        
-        # rename
-        names(tmp) <- c("country", "age_years", "age_groups",
-                        "year", 
-                        "year_birth",
-                        "cluster_number", "hh_number", "wgt", "prim_samp_unit", "strata", "stratification",
-                        "residence", "region",
-                        "fgm_know", 
-                        "fgm",
-                        "fgm_age",
-                        "support")
-        
-        # Set missing variables to NA
-        tmp$fgm_know  <- NA
-        tmp$year_birth <- paste(19,tmp$year_birth, sep="")
-        tmp$year_birth <- as.numeric(tmp$year_birth)
-      }
-      if (tmp$country[1] == "CI"){
-        if(tmp$V007[1] == 94){ # Cote d'Ivoire 1994, there were two DHs' phase III in Cote divoire
-          
-          name <- tmp$country[1]
-          
-          # Select variables
-          tmp <- tmp %>%
-            dplyr::select(c("country", "V012","V013",                   
-                            "V007",  
-                            "V010",
-                            "V001" ,"V002","V005","V021","V022","V023",  
-                            "V025", "V024",
-                            "V004",                                      # placeholder, there is no data if every heard of FGM
-                            "S229", 
-                            "S231",
-                            "V008"))                                     # placeholder, there is no data on approval/disapproval
-          
-          
-          
-          # rename
-          names(tmp) <- c("country", "age_years", "age_groups",
-                          "year", 
-                          "year_birth",
-                          "cluster_number", "hh_number", "wgt", "prim_samp_unit", "strata", "stratification",
-                          "residence", "region",
-                          "fgm_know", 
-                          "fgm",
-                          "fgm_age",
-                          "support")
-          
-          # Set missing variables to NA 
-          tmp$fgm_know <- NA
-          tmp$support  <- NA
-          tmp$year_birth <- paste(19,tmp$year_birth, sep="")
-          tmp$year_birth <- as.numeric(as.character(tmp$year_birth))
-        }
-      } 
-      if(!is.null(tmp$wave)){
-        if (tmp$country[1] == "CI"){
-          if(tmp$V007[1] == 1999 | tmp$V007[1] == 1998){ # Cote d'Ivoire 1999, there were two DHs' phase III in Cote divoire
-            
-            name <- tmp$country[1]
-            
-            #Select variables
-            tmp <- tmp %>%
-              dplyr::select(c("country", "V012","V013",                    
-                              "V007",  
-                              "V010",
-                              "V001" ,"V002","V005","V021","V022","V023",  
-                              "V025",  "V024",                                  
-                              "S901",   # heard of FGM, but no probing question                                   
-                              "S902",
-                              "S904",
-                              "S916"))                                     
-            
-            # rename
-            names(tmp) <- c("country", "age_years", "age_groups",
-                            "year", 
-                            "year_birth",
-                            "cluster_number", "hh_number", "wgt", "prim_samp_unit", "strata", "stratification",
-                            "residence", "region",
-                            "fgm_know", 
-                            "fgm",
-                            "fgm_age",
-                            "support")
-            
-            tmp$year_birth <- paste(19,tmp$year_birth, sep="")
-            tmp$year_birth <- as.numeric(as.character(tmp$year_birth))
-          }
-        }}
-      if (tmp$country[1] == "ML"){ # Mali 1995-1996
-        
-        name <- tmp$country[1]
-        
-        #Select variables
-        tmp <- tmp %>%
-          dplyr::select(c("country", "V012","V013",                    
-                          "V007",
-                          "V010",
-                          "V001" ,"V002","V005","V021","V022","V023",  
-                          "V025",  "V024" ,    
-                          "V004",                                      # placeholder, there is no data on if every heard of FGM
-                          "S551",
-                          "S553",
-                          "S560"))
-        
-        # rename
-        names(tmp) <- c("country", "age_years", "age_groups",
-                        "year", 
-                        "year_birth",
-                        "cluster_number", "hh_number", "wgt", "prim_samp_unit", "strata", "stratification",
-                        "residence", "region",
-                        "fgm_know", 
-                        "fgm",
-                        "fgm_age",
-                        "support")
-        
-        # Set missing variables to NA
-        tmp$fgm_know <- NA  
-        tmp$year_birth <- paste(19,tmp$year_birth, sep="")
-        tmp$year_birth <- as.numeric(as.character(tmp$year_birth))
-      }
-      if (tmp$country[1] == "NI"){ # Niger 1998
-        
-        name <- tmp$country[1]
-        
-        #Select variables
-        tmp <- tmp %>%
-          dplyr::select(c("country", "V012","V013",                    
-                          "V007",
-                          "V010",
-                          "V001" ,"V002","V005","V021","V022","V023",  
-                          "V025",  "V024",                                    
-                          "S551",                  # Heard of circumcision, but not probing question                                   
-                          "S552",
-                          "S554",
-                          "S556"))                                     
-        
-        # rename
-        names(tmp) <- c("country", "age_years", "age_groups",
-                        "year", 
-                        "year_birth",
-                        "cluster_number", "hh_number", "wgt", "prim_samp_unit", "strata", "stratification",
-                        "residence", "region",
-                        "fgm_know", 
-                        "fgm",
-                        "fgm_age",
-                        "support")
-        tmp$year_birth <- paste(19,tmp$year_birth, sep="")
-        tmp$year_birth <- as.numeric(as.character(tmp$year_birth))
-        
-      }   }   }
+  # append to complete dataset
+  df <- rbind(df, long_allchildren)
   
-  # DHS wave 4: 1997-2003 - approximate date --------------------------------
+  # Re-calculate NAs, distinguish between no age given, and respondent indicating 'during infancy'
   
-  if (!is.null(tmp$wave)){ # code needs to jump over this section if data was already processed and wave no longer exists as column
-    test <- c(tmp$wave == 4)[1] # select countries in the first wave
-    
-    if (test == TRUE) {
-      
-      if (tmp$country[1] == "CM"){ # Cameroon 2004
-        
-        # only women who were selected
-        tmp <- tmp %>%
-          filter(SELIG1 == "Yes")
-        
-        #table(tmp$S1001) # Knows of FGM
-        #table(tmp$S1002) # Knows of FGM (probed)
-        
-        tmp$S1001 <- ifelse(tmp$S1001 == "Yes" | tmp$S1002 == "Yes", "Yes", "No")
-        
-        #Select variables
-        tmp <- tmp %>%
-          dplyr::select(c("country", "V012","V013",                    
-                          "V007",
-                          "V010",
-                          "V001" ,"V002","SWEIGHT2","V021","V022","V023",  
-                          "V025", "V024",                                  
-                          "S1001",                                     
-                          "S1003",
-                          "S1007",
-                          "S1023"))                                   
-        
-        # rename 
-        names(tmp) <- c("country", "age_years", "age_groups",
-                        "year", 
-                        "year_birth",
-                        "cluster_number", "hh_number", "wgt", "prim_samp_unit", "strata", "stratification",
-                        "residence", "region",
-                        "fgm_know", 
-                        "fgm",
-                        "fgm_age",
-                        "support")
-      }
-      
-      if (tmp$country[1] == "TD"){ # Chad 2004
-        
-        #table(tmp$S1001) # Knows of FGM
-        #table(tmp$S1002) # Knows of FGM (probed)
-        
-        tmp$S1001 <- ifelse(tmp$S1001 == "Yes" | tmp$S1002 == "Yes", "Yes", "No")
-        
-        #Select variables
-        tmp <- tmp %>%
-          dplyr::select(c("country", "V012","V013",                   
-                          "V007",   
-                          "V010",
-                          "V001" ,"V002","V005","V021","V022","V023",  
-                          "V025", "V024",                                     
-                          "S1001",                                     
-                          "S1003",
-                          "S1007", 
-                          "S1023"))                                
-        
-        # rename 
-        names(tmp) <- c("country", "age_years", "age_groups",
-                        "year", 
-                        "year_birth",
-                        "cluster_number", "hh_number", "wgt", "prim_samp_unit", "strata", "stratification",
-                        "residence", "region",
-                        "fgm_know", 
-                        "fgm",
-                        "fgm_age",
-                        "support")
-        
-        tmp$fgm_age <- as.character(tmp$fgm_age)
-        
-        tmp$fgm_age <- ifelse(tmp$fgm_age == "100" | tmp$fgm_age == "101" | tmp$fgm_age == "199" | tmp$fgm_age == "200" |
-                                tmp$fgm_age == "1 month", 0, 
-                              ifelse(tmp$fgm_age == "201" | tmp$fgm_age == "One year", 1, tmp$fgm_age))
-      }
-      
-      if (tmp$country[1] == "BJ"){ # Benin 2001
-        
-        name <- tmp$country[1]
-        
-        #Select variables
-        tmp <- tmp %>%
-          dplyr::select(c("country", "V012","V013",                    
-                          "V007",
-                          "V010",
-                          "V001" ,"V002","V005","V021","V022","V023",  
-                          "V025",  "V024",                                   
-                          "FG100",  # no probing question asked                                  
-                          "FG103",
-                          "FG107",
-                          "FG123"))                                   
-        
-        # rename
-        names(tmp) <- c("country", "age_years", "age_groups",
-                        "year", 
-                        "year_birth",
-                        "cluster_number", "hh_number", "wgt", "prim_samp_unit", "strata", "stratification",
-                        "residence", "region",
-                        "fgm_know", 
-                        "fgm",
-                        "fgm_age",
-                        "support")
-        
-      }
-      
-      if (tmp$country[1] == "ML"){ # Mali 2001
-        
-        name <- tmp$country[1]
-        #Select variables
-        tmp <- tmp %>%
-          dplyr::select(c("country", "V012","V013",                    
-                          "V007",  
-                          "V010",
-                          "V001" ,"V002","V005","V021","V022","V023", 
-                          "V025", "V024",                                   
-                          "FG100",   # no probing question                                 
-                          "FG103", 
-                          "FG107", 
-                          "FG123"))                                   
-        
-        # rename
-        names(tmp) <- c("country", "age_years", "age_groups",
-                        "year", 
-                        "year_birth",
-                        "cluster_number", "hh_number", "wgt", "prim_samp_unit", "strata", "stratification",
-                        "residence", "region",
-                        "fgm_know", 
-                        "fgm",
-                        "fgm_age",
-                        "support")
-      }
-      
-      
-      if (tmp$country[1] == "BF" | tmp$country[1] == "SN" | tmp$country[1] == "TZ" | tmp$country[1] == "GN"){ 
-        #Burkina Faso 2003/Senegal 2005/Tanzania 2004/Guinea 2005
-        tmp <- tmp %>%
-          dplyr::select(c("country", "V012","V013",                   
-                          "V007",    
-                          "V010",
-                          "V001" ,"V002","V005","V021","V022","V023", 
-                          "V025", "V024",                                     
-                          "FG100",  # no probing question                                 
-                          "FG103",
-                          "FG107",
-                          "FG123"))                                   
-        
-        # rename
-        names(tmp) <- c("country", "age_years", "age_groups",
-                        "year", 
-                        "year_birth",
-                        "cluster_number", "hh_number", "wgt", "prim_samp_unit", "strata", "stratification",
-                        "residence", "region",
-                        "fgm_know", 
-                        "fgm",
-                        "fgm_age",
-                        "support")
-      }
-      
-      if (tmp$country[1] == "NG"){ # Nigeria
-        tmp <- tmp %>%
-          dplyr::select(c("country", "V012","V013",                   
-                          "V007",  
-                          "V010",
-                          "V001" ,"V002","V005","V021","V022","V023", 
-                          "V025",  "V024",                                     
-                          "FG100",    # no probing question                                   
-                          "FG103", 
-                          "FG107",
-                          "FG123"))                                   
-        
-        # rename
-        names(tmp) <- c("country", "age_years", "age_groups",
-                        "year", 
-                        "year_birth",
-                        "cluster_number", "hh_number", "wgt", "prim_samp_unit", "strata", "stratification",
-                        "residence", "region",
-                        "fgm_know", 
-                        "fgm",
-                        "fgm_age",
-                        "support")
-      } 
-      
-      
-      if(tmp$country[1] != "CM" & # I believe this part might be cut, all countries are expcetions
-         tmp$country[1] != "TD" &
-         tmp$country[1] != "BJ" &
-         tmp$country[1] != "EG" &
-         tmp$country[1] != "ET" &
-         tmp$country[1] != "ML" &
-         tmp$country[1] != "KE" &
-         tmp$country[1] != "GH" &
-         tmp$country[1] != "BF" &
-         tmp$country[1] != "NG" &
-         tmp$country[1] != "SN" &
-         tmp$country[1] != "TZ" &
-         tmp$country[1] != "GN"){
-        #Select variables
-        tmp <- tmp %>%
-          dplyr::select(c("country", "V012","V013",                  
-                          "V007", 
-                          "V010",
-                          "V001" ,"V002","V005","V021","V022","V023",
-                          "V025", "V024",                                     
-                          "FG101",                                    
-                          "FG103", 
-                          "FG107",
-                          "FG123"))                                  
-        
-        # rename
-        names(tmp) <- c("country", "age_years", "age_groups",
-                        "year", 
-                        "year_birth",
-                        "cluster_number", "hh_number", "wgt", "prim_samp_unit", "strata", "stratification",
-                        "residence", "region",
-                        "fgm_know", 
-                        "fgm",
-                        "fgm_age",
-                        "support")
-      }
-    }
-  }
+  # recode fgm to numeric variable
+  
+  df$fgm_status <- ifelse(df$G121 == "Yes" , 1,
+                          ifelse(df$G121 == "No", 0, NA))
+  
+  df$wgt <- df$V005/1000000
+  
+  # Test ################################################################################################
+  #mics_design_d  <- svydesign(id         = ~V021, # primary sampling units shoudl be same as cluster_number
+  #                           strata         = ~V022, 
+  #                          weight         = ~wgt,
+  #                         data           = df, 
+  #                        nest = T)
+  
+  #svymean(~fgm_status, mics_design_d, na.rm=T)
+  #svytable(~fgm_status, mics_design_d)
+  #svytable(~G121, mics_design_d)
+  # Test ################################################################################################
+  
+  df$G122 <- ifelse(df$G122 == "During first week" |
+                      df$G122 == "After first week and before the first year", 0, df$G122)
+  
+  df$G122 <- ifelse(df$G122 == "During infancy" |
+                      df$G122 == "At birth/during infancy**", "95", df$G122)
+  
+  df$G122 <- as.numeric(as.character(df$G122))
+  
+  total<-length(which(df$G122 >= 0 & df$G122<=2))
+  
+  # %3
+  at0 <- length(which(df$G122==0))/total
+  # %4
+  at1 <- length(which(df$G122==1))/total
+  # %5
+  at2 <- length(which(df$G122==2))/total
+  
+  #Test
+  sum(at0, at1, at2) # must be 1
+  
+  x0_2 <- sample(0:2, size=length(which(df$G122==95)), replace=TRUE, prob=c(at0, at1, at2))
+  
+  df$G122 <- ifelse(df$G122 == 95, x0_2, df$G122)
+  
+  df$G122 <- ifelse(df$G122 > 95 , NA, df$G122)
+  
+  # add time to event column
+  df$time <- ifelse(df$fgm_status == 0, as.numeric(as.character(df$B8)),
+                    ifelse(df$fgm_status == 1, as.numeric(as.character(df$G122)), NA))
   
   
+  # add id column that is 1 for each recrod in order to count unweighted and weighted population sizes
+  df$id <- 1
   
-  # DHS wave 5: 2003-2008 & wave 6: 2008-2013 & wave 7: 2013-2018 -----------
+  # create country variable
+  df$country <- substr(as.character(df$V000), 0, 2)
   
-  if (!is.null(tmp$wave)){ # code needs to jump over this section if data was already processed and wave no longer exists as column
-    test <- c(tmp$wave == 5 | tmp$wave == 6 | tmp$wave == 7)[1] # select countries in the first wave
-    
-    if (test == TRUE) { 
-      
-      if(!is.na(tmp$V007[1])){
-        if (tmp$country[1] == "EG" & tmp$V007[1] == 2008){
-          
-          tmp <- tmp %>%
-            dplyr::select(c("country", "V012","V013",                  
-                            "V007",                                
-                            "V010",
-                            "V001" ,"V002","V005","V021","V022","V023", 
-                            "V025", "SGOVERN",                                     
-                            "G100",    # no probing question                         
-                            "G102",                                  
-                            "G106", 
-                            "G119"))                             
-          
-          # Remove North and South Sainai due to later lack of coverage of the region
-          tmp <- tmp %>%
-            filter(SGOVERN != "South Sainai" & SGOVERN != "North Sainai" )
-          
-          # rename
-          names(tmp) <- c("country", "age_years", "age_groups",
-                          "year", 
-                          "year_birth",
-                          "cluster_number", "hh_number", "wgt", "prim_samp_unit", "strata", "stratification",
-                          "residence", "region",
-                          "fgm_know", 
-                          "fgm",
-                          "fgm_age",
-                          "support")
-          
-          
-        }
-        
-      }
-      
-      
-      if (tmp$country[1] == "CI"){ # Cote d'Ivoire 2011-12
-        if (!is.null(tmp$V007)){
-          if(tmp$V007[1] == 2011 | tmp$V007[1] == 2012){ 
-            
-            #table(tmp$S1001) # Knows of FGM
-            #table(tmp$S1002) # Knows of FGM (probed)
-            
-            tmp$G100 <- ifelse(tmp$G100 == "Yes" | tmp$G101 == "Yes", "Yes", "No")
-            
-            tmp <- tmp %>%
-              dplyr::select(c("country", "V012","V013",                   
-                              "V007",
-                              "V010",
-                              "V001" ,"V002","V005","V021","V022","V023", 
-                              "V025",   "V024",                                  
-                              "G100",                                   
-                              "G102",
-                              "G106",
-                              "G119"))                                  
-            
-            # rename
-            names(tmp) <- c("country", "age_years", "age_groups",
-                            "year", 
-                            "year_birth",
-                            "cluster_number", "hh_number", "wgt", "prim_samp_unit", "strata", "stratification",
-                            "residence", "region",
-                            "fgm_know", 
-                            "fgm",
-                            "fgm_age",
-                            "support")
-          }
-        }
-      }
-      
-      
-      
-      if(!is.null(tmp$V007)){
-        if (tmp$country[1] != "CI" & tmp$country[1] != "EG"){ # all others, changed LB to EG (20 Feb)
-          
-          #table(tmp$S1001) # Knows of FGM
-          #table(tmp$S1002) # Knows of FGM (probed)
-          
-          tmp$G100 <- ifelse(tmp$G100 == "Yes" | tmp$G101 == "Yes", "Yes", "No")
-          
-          tmp <- tmp %>%
-            dplyr::select(c("country", "V012","V013",                  
-                            "V007",                                  
-                            "V010",
-                            "V001" ,"V002","V005","V021","V022","V023", 
-                            "V025",  "V024",
-                            "G100",                                   
-                            "G102",                                  
-                            "G106",
-                            "G119"))                                
-          
-          # rename
-          names(tmp) <- c("country", "age_years", "age_groups",
-                          "year", 
-                          "year_birth",
-                          "cluster_number", "hh_number", "wgt", "prim_samp_unit", "strata", "stratification",
-                          "residence", "region",
-                          "fgm_know", 
-                          "fgm",
-                          "fgm_age",
-                          "support")
-        }
-      }
-    }
-  }
+  #add uniuqe cluster_numbers
+  df$year <- as.character(df$V007)
   
-  # create unique cluster and strata variables
-  
-  tmp <- tmp %>%
-    mutate(cluster_number_unique = paste(cluster_number,country,year, sep="")) %>%
-    mutate(strata_unique = paste(strata,country,year, sep=""))# %>%
-  #mutate(survey_id = i)
-  
+  df <- df %>%
+    mutate(cluster_number_unique = paste(V001,country,year, sep="")) %>%
+    mutate(strata_unique = paste(V022, country, year, sep="")) %>%
+    mutate(survey_id = i)
   
   # Recode country name 
-  tmp$country <- ifelse(tmp$country == "BJ", "Benin",
-                        ifelse(tmp$country == "BF", "Burkina Faso",
-                               ifelse(tmp$country == "SD", "Sudan",
-                                      ifelse(tmp$country == "CM", "Cameroon",
-                                             ifelse(tmp$country == "CF", "Central African Republic", 
-                                                    ifelse(tmp$country == "TD", "Chad",
-                                                           ifelse(tmp$country == "CI", "Cote d'Ivoire", 
-                                                                  ifelse(tmp$country == "EG", "Egypt", 
-                                                                         ifelse(tmp$country == "ET", "Ethiopia",
-                                                                                ifelse(tmp$country == "GM", "Gambia",
-                                                                                       ifelse(tmp$country == "GH", "Ghana",
-                                                                                              ifelse(tmp$country == "GN", "Guinea", 
-                                                                                                     ifelse(tmp$country == "KE", "Kenya",
-                                                                                                            ifelse(tmp$country == "ML", "Mali",
-                                                                                                                   ifelse(tmp$country == "NI", "Niger",
-                                                                                                                          ifelse(tmp$country == "NG", "Nigeria",
-                                                                                                                                 ifelse(tmp$country == "SN", "Senegal",
-                                                                                                                                        ifelse(tmp$country == "SL", "Sierra Leone",
-                                                                                                                                               ifelse(tmp$country == "TZ", "United Republic of Tanzania",
-                                                                                                                                                      ifelse(tmp$country == "TG", "Togo",
-                                                                                                                                                             ifelse(tmp$country == "UG", "Uganda", 
-                                                                                                                                                                    ifelse(tmp$country == "YE", "Yemen",
-                                                                                                                                                                           ifelse(tmp$country == "LB", "Liberia", tmp$country)))))))))))))))))))))))
+  df$country <- ifelse(df$country == "BJ", "Benin",
+                       ifelse(df$country == "BF", "Burkina Faso",
+                              ifelse(df$country == "SD", "Sudan",
+                                     ifelse(df$country == "CM", "Cameroon",
+                                            ifelse(df$country == "CF", "Central African Republic", 
+                                                   ifelse(df$country == "TD", "Chad",
+                                                          ifelse(df$country == "CI", "Cote d'Ivoire", 
+                                                                 ifelse(df$country == "EG", "Egypt", 
+                                                                        ifelse(df$country == "ET", "Ethiopia",
+                                                                               ifelse(df$country == "GM", "Gambia",
+                                                                                      ifelse(df$country == "GH", "Ghana",
+                                                                                             ifelse(df$country == "GN", "Guinea", 
+                                                                                                    ifelse(df$country == "KE", "Kenya",
+                                                                                                           ifelse(df$country == "ML", "Mali",
+                                                                                                                  ifelse(df$country == "NI", "Niger",
+                                                                                                                         ifelse(df$country == "NG", "Nigeria",
+                                                                                                                                ifelse(df$country == "SN", "Senegal",
+                                                                                                                                       ifelse(df$country == "SL", "Sierra Leone",
+                                                                                                                                              ifelse(df$country == "TZ", "United Republic of Tanzania",
+                                                                                                                                                     ifelse(df$country == "TG", "Togo",
+                                                                                                                                                            ifelse(df$country == "UG", "Uganda", 
+                                                                                                                                                                   ifelse(df$country == "YE", "Yemen",
+                                                                                                                                                                          ifelse(df$country == "LB", "Liberia", df$country)))))))))))))))))))))))
   
-  # if year is wrongly coded sapply(tmp$year[1], nchar)
-  if (sapply(as.character(tmp$year[1]), nchar) < 4){
-    tmp$year <- ifelse(tmp$year == 99, 1999, 
-                       ifelse(tmp$year == 98, 1998,
-                              ifelse(tmp$year == 97, 1997,
-                                     ifelse(tmp$year == 96, 1996,
-                                            ifelse(tmp$year == 95, 1995,
-                                                   ifelse(tmp$year == 94, 1994,
-                                                          ifelse(tmp$year == 93, 1993,
-                                                                 ifelse(tmp$year == 92, 1992,
-                                                                        ifelse(tmp$year == 91, 1991,
-                                                                               ifelse(tmp$year == 90, 1990,
-                                                                                      ifelse(tmp$year == 89, 1989,
-                                                                                             ifelse(tmp$year == 88, 1988, tmp$year))))))))))))
+  # if year is wrongly coded sapply(df$v007[1], nchar)
+  if (sapply(as.character(df$V007[1]), nchar) < 4){
+    df$V007 <- ifelse(df$V007 == 99, 1999, 
+                      ifelse(df$V007 == 98, 1998,
+                             ifelse(df$V007 == 97, 1997,
+                                    ifelse(df$V007 == 96, 1996,
+                                           ifelse(df$V007 == 95, 1995,
+                                                  ifelse(df$V007 == 94, 1994,
+                                                         ifelse(df$V007 == 93, 1993,
+                                                                ifelse(df$V007 == 92, 1992,
+                                                                       ifelse(df$V007 == 91, 1991,
+                                                                              ifelse(df$V007 == 90, 1990,
+                                                                                     ifelse(df$V007 == 89, 1989,
+                                                                                            ifelse(df$V007 == 88, 1988, df$V007))))))))))))
   }
   
-  if(tmp$country[1] == "Kenya"){ # North eastern province has only be added after 1998 DHS in Kenya
-    # for 2008_09 and 2014 we need to excluded if we want to assure 
-    # comparability
-    tmp <- tmp %>%
-      filter(region != "Northeastern")%>%
-      filter(region != "North Eastern")
-  }
+  df$n_survey <- nrow(df)
   
-  # pooled analysis: if no further adjustments of weights, surveys with higher sample size have more weight
-  # therefore: rescale/denormalize weights to population size
-  
-  # count unweighted surveyed 15-19 year olds
-  tmp$n_survey <- nrow(tmp)
-  
-  # get total population of 15-44 year olds at mid-year of the survey
-  tmp <- merge(population, tmp, by = c("country", "year"))
+  # get total population of 15-19 year olds at mid-year of the survey
+  df <- merge(population, df, by = c("country", "year"))
   
   # denormalize weight
   # https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/1471-2288-9-49
   # https://rpubs.com/corey_sparks/27276
   
-  # filter women in right age group
-  tmp <- tmp %>%
-    filter(age_years < 50)
+  df <- df %>%
+    mutate(V005 = as.numeric(V005)/1000000)
   
-  tmp <- tmp %>%
-    mutate(wgt = as.numeric(wgt)/1000000)
-  
-  tmp <- tmp %>%
-    mutate(re_wgt = wgt*(as.numeric(pop)*1000)/n_survey)
-  
-  # recode fgm
-  tmp$fgm_know <- ifelse(tmp$fgm_know == "Non" | tmp$fgm_know == "No", tmp$fgm_know == 0, 
-                         ifelse(tmp$fgm_know == "Yes" | tmp$fgm_know == "Oui", 1, NA))
-  
-  table(tmp$fgm)
-  
-  tmp$fgm <- ifelse(tmp$fgm == "Oui" | tmp$fgm == "Yes" | tmp$fgm == "Sim" | tmp$fgm == 1, 1,
-                    ifelse(tmp$fgm == "Non" | tmp$fgm == "No" | tmp$fgm == "Nao" | tmp$fgm == 0, 0, NA))
-  
-  
-  tmp$fgm <- ifelse(tmp$fgm_know == 0, 0, tmp$fgm)
-  
-  tmp$wgt <- tmp$wgt/1000000
-  
-  # test to compare with survey - added February 8 2019
-  #mics_design_d  <- svydesign(id         = ~cluster_number, # primary sampling units shoudl be same as cluster_number
-  #                           strata         = ~strata, 
-  #                          weight         = ~wgt,
-  #                         data           = tmp, 
-  #                        nest = T)
-  #svymean(~fgm, mics_design_d, na.rm=T)
-  #svytable(~fgm, mics_design_d)
-  ###############################
-  
-  #NAs
-  tmp$fgm_age <- as.character(tmp$fgm_age)
-  
-  if(tmp$country[1] == "Cote d'Ivoire" & (tmp$year[1] == 1999 | tmp$year[1] == 1998)){
-    
-    tmp$fgm_age <- ifelse(tmp$fgm_age == "Early neonatal", "0", tmp$fgm_age)
-  }
-  
-  if(paste(tmp$country[1],tmp$year[1], sep="") != "Chad2004"){
-    tmp$fgm_age <- ifelse(tmp$fgm_age == "During infancy" | tmp$fgm_age == "During Infancy",  "95", tmp$fgm_age)
-    
-    tmp$fgm_age <- ifelse(tmp$fgm_age == "During first week" |
-                            tmp$fgm_age == "After first week and before the first year", 0, tmp$fgm_age)
-    
-    
-    tmp$fgm_age <- as.numeric(as.character(tmp$fgm_age))
-    
-    
-    total<-length(which(tmp$fgm_age >= 0 & tmp$fgm_age<=2))
-    
-    # %3
-    at0 <- length(which(tmp$fgm_age==0))/total
-    # %4
-    at1 <- length(which(tmp$fgm_age==1))/total
-    # %5
-    at2 <- length(which(tmp$fgm_age==2))/total
-    
-    #Test
-    sum(at0, at1, at2) # must be 1
-    
-    x0_2 <- sample(0:2, size=length(which(tmp$fgm_age==95)), replace=TRUE, prob=c(at0, at1, at2))
-    
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 95, x0_2, tmp$fgm_age)
-    
-    tmp$fgm_age <- ifelse(tmp$fgm_age > 95 , NA, tmp$fgm_age)
-  }
-  
-  
-  # Chad 2004 might have to be exluded if the bellow assumption do not hold.
-  if(tmp$country[1] == "Chad" & tmp$year[1] == 2004){
-    tmp$fgm_age <- ifelse(tmp$fgm_age == "Before 5 years or so", "95", tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == "Around 5-9 years", "96", tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == "Around at 10 years or more", "97", tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == "1 month", 0, tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == "One year", 1, tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 102, 2, tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 103, 3, tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 107, 7, tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 108, 8, tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 109, 9, tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 110, 10, tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 111, 11, tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 112, 12, tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 202, 2, tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 203, 3, tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 204, 4, tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 205, 5, tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 206, 6, tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 207, 7, tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 208, 8, tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 209, 9, tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 210, 10, tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 211, 11, tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 212, 12, tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 213, 13, tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 214, 14, tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 215, 15, tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 216, 16, tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 217, 17, tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 218, 18, tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 219, 19, tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 220, 20, tmp$fgm_age)
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 223, 23, tmp$fgm_age)
-    
-    tmp$fgm_age <- as.numeric(as.character(tmp$fgm_age))
-    
-    total<-length(which(tmp$fgm_age >= 0 & tmp$fgm_age<=5))
-    
-    # %0
-    at0 <- length(which(tmp$fgm_age==0))/total
-    # %1
-    at1 <- length(which(tmp$fgm_age==1))/total
-    # %2
-    at2 <- length(which(tmp$fgm_age==2))/total
-    # %3
-    at3 <- length(which(tmp$fgm_age==3))/total
-    # %4
-    at4 <- length(which(tmp$fgm_age==4))/total
-    # %5
-    at5 <- length(which(tmp$fgm_age==5))/total
-    
-    #Test
-    sum(at0, at1, at2, at3, at4, at5) # must be 1
-    
-    x0_5 <- sample(0:5, size=length(which(tmp$fgm_age==95)), replace=TRUE, prob=c(at0, at1, at2, at3, at4, at5))
-    
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 95, x0_5, tmp$fgm_age)
-    
-    total<-length(which(tmp$fgm_age >= 6 & tmp$fgm_age<=9))
-    
-    # %0
-    at6 <- length(which(tmp$fgm_age==6))/total
-    # %1
-    at7 <- length(which(tmp$fgm_age==7))/total
-    # %2
-    at8 <- length(which(tmp$fgm_age==8))/total
-    # %3
-    at9 <- length(which(tmp$fgm_age==9))/total
-    
-    #Test
-    sum(at6, at7, at8, at9) # must be 1
-    
-    x6_9 <- sample(6:9, size=length(which(tmp$fgm_age==96)), replace=TRUE, prob=c(at6, at7, at8, at9))
-    
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 96, x6_9, tmp$fgm_age)
-    
-    total<-length(which(tmp$fgm_age >= 10 & tmp$fgm_age < 21))
-    
-    # %0
-    at10 <- length(which(tmp$fgm_age==10))/total
-    # %1
-    at11 <- length(which(tmp$fgm_age==11))/total
-    # %2
-    at12 <- length(which(tmp$fgm_age==12))/total
-    # %3
-    at13 <- length(which(tmp$fgm_age==13))/total
-    # %0
-    at14 <- length(which(tmp$fgm_age==14))/total
-    # %1
-    at15 <- length(which(tmp$fgm_age==15))/total
-    # %2
-    at16 <- length(which(tmp$fgm_age==16))/total
-    # %3
-    at17 <- length(which(tmp$fgm_age==17))/total
-    # %0
-    at18 <- length(which(tmp$fgm_age==18))/total
-    # %1
-    at19 <- length(which(tmp$fgm_age==19))/total
-    # %2
-    at20 <- length(which(tmp$fgm_age==20))/total
-    
-    #Test
-    sum(at10, at11, at12, at13, at14, at15, at16, at17, at18, at19, at20) # must be 1
-    
-    x10_up <- sample(10:20, size=length(which(tmp$fgm_age==97)), replace=TRUE, prob=c(at10, at11, at12, at13, at14, at15, at16, at17, at18, at19, at20))
-    
-    tmp$fgm_age <- ifelse(tmp$fgm_age == 97, x10_up, tmp$fgm_age)
-    
-    tmp$fgm_age <- ifelse(tmp$fgm_age > 90 , NA, tmp$fgm_age)
-    
-  }
-  
-  # add time to event column
-  
-  tmp$time <- CalculateTimetoEvent(tmp$fgm, tmp$fgm_age, tmp$age_years)
-  
+  df <- df %>%
+    mutate(re_wgt = V005*(as.numeric(pop)*1000)/n_survey)
   
   # add cohort index
-  tmp$cohort10 <- ifelse(1960 <=   tmp$year_birth &   tmp$year_birth < 1970, 1, 
-                         ifelse(1970 <=   tmp$year_birth &   tmp$year_birth < 1980, 2,
-                                ifelse(1980 <=   tmp$year_birth &   tmp$year_birth < 1990, 3,
-                                       ifelse(1990 <=   tmp$year_birth &   tmp$year_birth < 2000, 4,
-                                              ifelse(2000 <=   tmp$year_birth &   tmp$year_birth < 2010, 5,
-                                                     ifelse(2010 <=   tmp$year_birth &   tmp$year_birth < 2020, 6, NA))))))
+  df$cohort10 <- ifelse(1960 <=   df$B2 &   df$B2 < 1970, 1, 
+                        ifelse(1970 <=   df$B2 &   df$B2 < 1980, 2,
+                               ifelse(1980 <=   df$B2 &   df$B2 < 1990, 3,
+                                      ifelse(1990 <=   df$B2 &   df$B2 < 2000, 4,
+                                             ifelse(2000 <=   df$B2 &   df$B2 < 2010, 5,
+                                                    ifelse(2010 <=   df$B2 &   df$B2 < 2020, 6, NA))))))
   
-  tmp$cohort5 <- ifelse(1955 <= tmp$year_birth & tmp$year_birth < 1960, 1,
-                        ifelse(1960 <=   tmp$year_birth &   tmp$year_birth < 1965, 2, 
-                               ifelse(1965 <=   tmp$year_birth &   tmp$year_birth < 1970, 3,
-                                      ifelse(1970 <=   tmp$year_birth &   tmp$year_birth < 1975, 4,
-                                             ifelse(1975 <=   tmp$year_birth &   tmp$year_birth < 1980, 5,
-                                                    ifelse(1980 <=   tmp$year_birth &   tmp$year_birth < 1985, 6,
-                                                           ifelse(1985 <=   tmp$year_birth &   tmp$year_birth < 1990, 7,
-                                                                  ifelse(1990 <=   tmp$year_birth &   tmp$year_birth < 1995, 8,
-                                                                         ifelse(1995 <=   tmp$year_birth &   tmp$year_birth < 2000, 9,
-                                                                                ifelse(2000 <=   tmp$year_birth &   tmp$year_birth < 2005, 10,
-                                                                                       ifelse(2005 <=   tmp$year_birth &   tmp$year_birth < 2010, 11,
-                                                                                              ifelse(2010 <=   tmp$year_birth &   tmp$year_birth < 2020, 12, NA))))))))))))  
+  df$cohort5 <- ifelse(1955 <= df$B2 & df$B2 < 1959, 1,
+                       ifelse(1960 <= df$B2 &  df$B2 < 1965, 2, 
+                              ifelse(1965 <=   df$B2 &   df$B2 < 1970, 3,
+                                     ifelse(1970 <=   df$B2 &   df$B2 < 1975, 4,
+                                            ifelse(1975 <=   df$B2 &   df$B2 < 1980, 5,
+                                                   ifelse(1980 <=   df$B2 &   df$B2 < 1985,6,
+                                                          ifelse(1985 <=   df$B2 &   df$B2 < 1990,7,
+                                                                 ifelse(1990 <=   df$B2 &   df$B2 < 1995, 8,
+                                                                        ifelse(1995 <=   df$B2 &   df$B2 < 2000, 9,
+                                                                               ifelse(2000 <=   df$B2 &   df$B2 < 2005, 10,
+                                                                                      ifelse(2005 <=   df$B2 &   df$B2 < 2010, 11,
+                                                                                             ifelse(2010 <=   df$B2 &   df$B2 < 2020, 12,NA))))))))))))
+  # select and reorder columns
+  df <- df %>%
+    select(c("country", "year", "pop",
+             "B8", "B2", "V001",
+             "V002", "V005", "V021", 
+             "V022", "V023", 
+             "V025", "V024", 
+             "fgm_status", "G122", 
+             "cluster_number_unique", "strata_unique", 
+             "survey_id", "n_survey", "re_wgt", 
+             "time", "cohort10", "cohort5"))
   
-  # append data 
-  df_DHS <- rbind(df_DHS, tmp)
-} 
+  # name columns
+  names(df) <- c("country", "year", "pop", 
+                 "age_years", "year_birth", "cluster_number", 
+                 "hh_number", "wgt", "prim_samp_unit", 
+                 "strata", "stratification", 
+                 "residence", "region", 
+                 "fgm", "fgm_age", 
+                 "cluster_number_unique", "strata_unique", "survey_id", 
+                 "n_survey", "re_wgt",  
+                 "time", "cohort10", "cohort5")
+  
+  if(df$country[1] == "Kenya"){# North eastern province has only be added after 1998 DHS in Kenya
+    # for 2008_09 and 2014 we need to excluded if we want to assure 
+    # comparability
+    df <- df%>%
+      filter(region != "North Eastern")
+  }
+  
+  # Append data
+  df_DHSd <- bind_rows(mutate_all(df_DHSd, as.character), mutate_all(df, as.character))
+}
 
-df_DHS$survey <- "DHS" # add column of data source for later merge with MICS data
+df_DHSd$survey <- "DHS" # add column of data source for later merge with MICS data
 
-# save dataset
-saveRDS(df_DHS, file = "survival_data_DHS_February2019.rds")
+saveRDS(df_DHSd, file = "survival_data_DHS_daughters_February2019.rds")
 
 setwd("C:/Users/weny/Google Drive/2018/FGM/02 -Trend modelling/FGM-trend-analysis/Codes")
-
