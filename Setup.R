@@ -4,8 +4,6 @@
 
 # Author comment ----------------------------------------------------------
 
-test 
-
 # written by Kathrin Weny
 
 # File description, purpose of code, inputs and output --------------------

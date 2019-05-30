@@ -759,7 +759,7 @@ for(i in countries){
 
 setwd("G:/My Drive/2019/1- FGM/05- Country profiles/Trend")
 
-list.countries <- c("Burkina Faso", "Nigeria", "Senegal", "Ethiopia", "Egypt", "Sudan", "Kenya")
+list.countries <- unique(survival_data$country)
 
 for(i in list.countries){
   
@@ -803,18 +803,40 @@ for(i in list.countries){
 
 setwd("G:/My Drive/2019/1- FGM/05- Country profiles/Age at FGM")
 
-
 # Only keep latest survey
 data.latest <- survival_data %>%
-  filter( (country == "Burkina Faso" & year == 2010) |
+      filter((country == "Burkina Faso" & year == 2010) |
             (country == "Nigeria" & (year == 2017 | year == 2016)) |
             (country == "Senegal" & year == 2017) | 
             (country == "Egypt" & year == 2015) |
             (country == "Sudan" & year == 2014) |
             (country == "Kenya" & year == 2014) | 
-            (country == "Ethiopia") )
+            (country == "Ethiopia") |
+            (country == "Benin" & (year ==2012 | year == 2011))|
+            (country == "Central African Republic" | year == 2010) |
+            (country == "Cote d'Ivoire" | year == 2016)|
+            (country == "Gambia" | year == 2013) |
+            (country == "Ghana" | year == 2011) |
+            (country == "Guinea" | year == 2016) |
+            (country == "Guinea-Bissau" | year == 2014)|
+            (country == "Iraq" | year == 2011) |
+            (country == "Kenya" | year == 2014)|
+            (country == "Mali" | year == 2015) |
+            (country == "Niger" | year == 2012) |
+            (country == "Nigeria" | year == 2017) |
+            (country == "Senegal" | year == 2017) |
+            (country == "Sierra Leone" | year == 2017) |
+            (country == "United Republic of Tanzania" | (year == 2015 | year == 2016)) |
+            (country == "Togo" | (year == 2013 | year == 2014))|
+            (country == "Yemen" | year == 2013)|
+            (country == "Chad" | (year == 2014 | year == 2015)))
 
-list.countries <- c("Burkina Faso", "Nigeria", "Senegal", "Egypt", "Sudan", "Ethiopia", "Kenya")
+list.countries <- c("Benin", "Burkina Faso", "Central African Republic",
+                    "Chad", "Cote d'Ivoire", "Egypt", "Ethiopia", 
+                    "Gambia", "Ghana", "Guinea", "Guinea-Bissau",
+                    "Iraq", "Kenya", "Mali", "Mauritania", "Niger", "Nigeria", 
+                    "Senegal", "Sierra Leone", "Sudan", "Togo", 
+                    "United Republic of Tanzania", "Yemen")
 
 for(i in list.countries){
   

@@ -26,7 +26,7 @@
 
 # Working directory
 
-setwd("C:/Users/weny/Google Drive/2018/FGM/02 -Trend modelling/01- Data/MICS")
+setwd("G:/My Drive/2018/FGM/02 -Trend modelling/01- Data/MICS")
 
 listsav <- dir(pattern = "*.sav")
 
