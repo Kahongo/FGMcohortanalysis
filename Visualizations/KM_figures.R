@@ -838,20 +838,24 @@ list.countries <- c("Benin", "Burkina Faso", "Central African Republic",
                     "Senegal", "Sierra Leone", "Sudan", "Togo", 
                     "United Republic of Tanzania", "Yemen")
 
+results <- data.frame(matrix(, nrow = 0, ncol = 4))
+
 for(i in list.countries){
-  
+
   data <- data.latest %>%
     filter(country == i) %>%
     filter(fgm >0) 
   
-  ethiopia <- survfit(Surv(as.numeric(time), as.numeric(fgm)==1) ~1, 
+  survival.curve <- survfit(Surv(as.numeric(time), as.numeric(fgm)==1) ~1, 
                       data,
                       weight= as.numeric(re_wgt))
   
   mc <- data.frame(q = c(.25, .5, .75),
-                   km = quantile(ethiopia))
+                   km = quantile(survival.curve))
   
-  survplot <- ggsurvplot(ethiopia, xlab = "Time (years)", ylab = "Cumulative event",
+  temp.results <- data.frame(i, t(as.data.frame(quantile(survival.curve)[1])))
+  
+  survplot <- ggsurvplot(survival.curve, xlab = "Time (years)", ylab = "Cumulative event",
                          censor = F, data, palette = "brown", conf.int = F, 
                          font.title=c(24, "bold", "brown"),
                          xlim=c(0,20))$plot +
@@ -863,16 +867,18 @@ for(i in list.countries){
     
     theme(legend.position = "none", plot.subtitle = element_text(size = 8))
   
-  ggsave(file = paste(i, ".pdf"), print(survplot), onefile=FALSE)
+  #ggsave(file = paste(i, ".pdf"), print(survplot), onefile=FALSE)
   
+  results <- rbind(results, temp.results)
+ 
 }
 
 
 
+names(results) <- c("country", "25% cut", "50% cut", "75% cut")
 
 
-
-
+write.csv(results, file = "age.at.fgm.csv")
 
 
 

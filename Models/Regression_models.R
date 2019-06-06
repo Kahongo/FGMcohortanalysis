@@ -11,8 +11,7 @@ memory.limit(size=56000)
 
 # Set up data set ------------------------------------------
 
-survival_data <- readRDS("C:/Users/weny/Google Drive/2018/FGM/02 -Trend modelling/01- Data/survival_data_February2019.rds", refhook = NULL)
-survival_data <- readRDS("C:/Users/Kathrin Weny/Google Drive/2018/FGM/02 -Trend modelling/01- Data/survival_data_February2019.rds", refhook = NULL)
+survival_data <- readRDS("G:/My Drive/2018/FGM/02 -Trend modelling/01- Data/survival_data_February2019.rds", refhook = NULL)
 
 survey1 <- survival_data %>%
   filter(!is.na(fgm)) %>%
@@ -52,17 +51,17 @@ survey <-      svydesign(id             = ~cluster_number_unique,
 # Model A: Logistic model with interaction on year and country 
 gc()
 logistic <-  svyglm(fgm~ year_birth*country, family=quasibinomial, design=survey)
-save(logistic, file = "C:/Users/weny/Google Drive/2019/1- FGM/02- Trend estimates/Results/logistic.model.results.rda")
+save(logistic, file = "G:/My Drive/2019/1- FGM/02- Trend estimates/Results/logistic.model.results.rda")
 
 # Coxmodel corresponding to logistic model --------------------------------
 gc()
 cox <- svycoxph(Surv(time, fgm>0)~ year_birth*country, survey)
-save(cox, file = "C:/Users/weny/Google Drive/2019/1- FGM/02- Trend estimates/Results/coxmodel.rda")
+save(cox, file = "G:/My Drive/2019/1- FGM/02- Trend estimates/Results/coxmodel.rda")
 
 # Test proportionality assumption -----------------------------------------
 gc()
 zph <- cox.zph(cox)
-save(zph, file = "C:/Users/weny/Google Drive/2019/1- FGM/02- Trend estimates/Results/zph.rda")
+save(zph, file = "G:/My Drive/2019/1- FGM/02- Trend estimates/Results/zph.rda")
 
 # Time split --------------------------------------------------------------
 # Source: I : https://www.r-bloggers.com/dealing-with-non-proportional-hazards-in-r/
@@ -78,7 +77,7 @@ survey.split <- timeSplitter(survey.split, by = 5,
 
 cox.split <- coxph(Surv(Start_time, Stop_time, fgm==1)~ year_birth*country + #svycoxph not available with splitter
                      country:Start_time, survey.split)
-save(cox.split, file = "C:/Users/weny/Google Drive/2019/1- FGM/02- Trend estimates/results.cox.split.rda")
+save(cox.split, file = "G:/My Drive/2019/1- FGM/02- Trend estimates/Results/results.cox.split.rda")
 
 # Strata ------------------------------------------------------------------
 # same as fitting different baseline hazard functions
@@ -87,52 +86,93 @@ save(cox.split, file = "C:/Users/weny/Google Drive/2019/1- FGM/02- Trend estimat
 gc()
 
 # cox.strata <- svycoxph(Surv(time, fgm==1)~ year_birth*country -country + strata(country), survey)
-# save(cox.strata, file = "C:/Users/weny/Google Drive/2019/1- FGM/02- Trend estimates/results.cox.strata.rda")
+# save(cox.strata, file = "G:/My Drive/2019/1- FGM/02- Trend estimates/Results/results.cox.strata.rda")
 # ==> not able to create a curve for models that contain an interaction without the lower order effect
 
 # cox.strata.II <- svycoxph(Surv(time, fgm==1)~ year_birth*strata(country), survey)
-# save(cox.strata.II, file = "C:/Users/weny/Google Drive/2019/1- FGM/02- Trend estimates/results.cox.strata.II.rda")
+# save(cox.strata.II, file = "G:/My Drive/2019/1- FGM/02- Trend estimates/Results/results.cox.strata.II.rda")
 
 #covs <- data.frame(country= "Guinea", year_birth = 1960:2017)
 #summary(survfit(cox.strata.II, newdata = covs, type = "aalen")) # Source Tutorial: Survival Estimation for Cox Regression
 # Models with Time-Varying Coefficients Using SAS and R
 
 # cox.strata.III <- coxph(Surv(time, fgm==1)~ year_birth*strata(country), survey1, robust=TRUE, weights = as.numeric(re_wgt))
-# save(cox.strata.III, file = "C:/Users/weny/Google Drive/2019/1- FGM/02- Trend estimates/results.cox.strata.III.rda")
+# save(cox.strata.III, file = "G:/My Drive/2019/1- FGM/02- Trend estimates/Results/results.cox.strata.III.rda")
 
 # cox.strata.IV <- svycoxph(Surv(time, fgm==1)~ year_birth:strata(country), survey)
-# save(cox.strata.IV, file = "C:/Users/weny/Google Drive/2019/1- FGM/02- Trend estimates/results.cox.strata.IV.rda")
+# save(cox.strata.IV, file = "G:/My Drive/2019/1- FGM/02- Trend estimates/Results/results.cox.strata.IV.rda")
 
 #cox.strata.V <- svycoxph(Surv(time, fgm==1)~ year_birth + strata(country), survey)
-#save(cox.strata.V, file = "C:/Users/weny/Google Drive/2019/1- FGM/02- Trend estimates/results.cox.strata.V.rda")
+#save(cox.strata.V, file = "G:/My Drive/2019/1- FGM/02- Trend estimates/Results/results.cox.strata.V.rda")
 
 cox.strata.VI <- svycoxph(Surv(time, fgm==1)~ year_birth:country + year_birth + strata(country), survey)
-save(cox.strata.VI, file = "C:/Users/weny/Google Drive/2019/1- FGM/02- Trend estimates/Results\results.cox.strata.VI.rda")
+save(cox.strata.VI, file = "G:/My Drive/2019/1- FGM/02- Trend estimates/Results/results.cox.strata.VI.rda")
 
 zph.cox.strata.VI  <- cox.zph(cox.strata.VI)
-save(zph.cox.strata.VI, file = "C:/Users/weny/Google Drive/2019/1- FGM/02- Trend estimates/Results/zph.cox.strata.VI.rda")
+save(zph.cox.strata.VI, file = "G:/My Drive/2019/1- FGM/02- Trend estimates/Results/zph.cox.strata.VI.rda")
+
+# Test if cox.strata.VI is the same with interaction model
+survey3 <- survey
+
+survey3$year.country.inter = interaction(survey3$country, survey3$year_birth, drop = TRUE)
+
+survey <-      svydesign(id             = ~cluster_number_unique, 
+                         strata         = ~strata_unique, 
+                         weight         = ~re_wgt,
+                         data           = survey3, 
+                         nest           = T)
+
+cox.strata.VI.test <- svycoxph(Surv(time, fgm==1)~ year.country.inter + year_birth + strata(country), survey)
+
+save(cox.strata.VI.test, file = "G:/My Drive/2019/1- FGM/02- Trend estimates/Results/results.cox.strata.VI.test.rda")
 
 
-cox.strata.VII <- svycoxph(Surv(time, fgm==1)~ year_birth:country:time + time + year_birth + strata(country), survey)
-save(cox.strata.VII, file = "test.cox.time.rda") #, file = "C:/Users/weny/Google Drive/2019/1- FGM/02- Trend estimates/Results\results.cox.strata.VII.rda")
+# Run Cox model for 1994-now ----------------------------------------------
 
-zph.cox.strata.VII <- cox.zph(cox.strata.VII)
+survey2 <- survey1 %>%
+  filter(year_birth > 1989)
+
+table(is.na(survey2$time))
+
+# Creating the interaction with the interaction function, the interaction function computes the factor identical to what 
+# is obtained by specificting an interaction term in a model (see: The R Primer, SEcond edition, By Claus Thorn Ekstrom)
+survey2$year.country.inter = interaction(survey2$country, survey2$year_birth, drop = TRUE)
+
+survey <-      svydesign(id             = ~cluster_number_unique, 
+                         strata         = ~strata_unique, 
+                         weight         = ~re_wgt,
+                         data           = survey2, 
+                         nest           = T)
+
+cox.strata.VI.a <- svycoxph(Surv(time, fgm==1)~ year_birth*strata(country), survey)
+
+save(cox.strata.VI.a, file = "G:/My Drive/2019/1- FGM/02- Trend estimates/Results/results.cox.strata.VI.a.rda")
+
+#cox.strata.VI.b <- svycoxph(Surv(time, fgm==1)~ year_birth:country + year_birth + strata(country), survey)
+#save(cox.strata.VI.b, file = "G:/My Drive/2019/1- FGM/02- Trend estimates/Results/results.cox.strata.VI.b.rda")
+# ==> failed to run. 
+
+# Model VII ---------------------------------------------------------------
+
+#cox.strata.VII <- svycoxph(Surv(time, fgm==1)~ year_birth:country:time + time + year_birth + strata(country), survey)
+#save(cox.strata.VII, file = "test.cox.time.rda") #, file = "G:/My Drive/2019/1- FGM/02- Trend estimates/Results/results.cox.strata.VII.rda")
+
+#zph.cox.strata.VII <- cox.zph(cox.strata.VII)
 
 # model per country
-
 
 for(i in countries){
   
   temp.model <- svycoxph(Surv(time, fgm==1)~ year_birth, design = subset(survey, country == i))
   
-  filename <- paste("C:/Users/weny/Google Drive/2019/1- FGM/02- Trend estimates/Results/", i, ".results.rda", sep ="")
+  filename <- paste("G:/My Drive/2019/1- FGM/02- Trend estimates/Results/", i, ".results.rda", sep ="")
   
   save(temp.model, file = filename)
   
   
 }
 
-load("C:/Users/weny/Google Drive/2019/1- FGM/02- Trend estimates/Results/Nigeria.timeinter.results.rda", verbose=T)
+load("G:/My Drive/2019/1- FGM/02- Trend estimates/Results/Nigeria.timeinter.results.rda", verbose=T)
 
 ggcoxzph(cox.zph(temp.model))
 
@@ -142,7 +182,7 @@ for(i in countries){
   
   temp.model <- svycoxph(Surv(time, fgm==1)~ year_birth*time, design = subset(survey, country == i))
   
-  filename <- paste("C:/Users/weny/Google Drive/2019/1- FGM/02- Trend estimates/Results/", i, ".timeinter.results.rda", sep ="")
+  filename <- paste("G:/My Drive/2019/1- FGM/02- Trend estimates/Results/", i, ".timeinter.results.rda", sep ="")
   
   save(temp.model, file = filename)
   
@@ -249,7 +289,7 @@ coxme.results <- coxme.results %>%
   mutate(upper.estimate = exp(upper)) %>%
   select(c("country", "point.estimate", "lower.estimate", "upper.estimate"))
 
-write.csv(coxme.results, file="C:/Users/weny/Google Drive/2019/1- FGM/02- Trend estimates/Results/coxme.results.csv")
+write.csv(coxme.results, file="G:/My Drive/2019/1- FGM/02- Trend estimates/Results/coxme.results.csv")
 
 
 
