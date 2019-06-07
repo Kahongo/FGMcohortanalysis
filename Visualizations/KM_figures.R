@@ -867,32 +867,40 @@ for(i in list.countries){
     
     theme(legend.position = "none", plot.subtitle = element_text(size = 8))
   
-  #ggsave(file = paste(i, ".pdf"), print(survplot), onefile=FALSE)
+  ggsave(file = paste(i, ".pdf"), print(survplot), onefile=FALSE)
   
   results <- rbind(results, temp.results)
  
 }
 
-
-
 names(results) <- c("country", "25% cut", "50% cut", "75% cut")
-
-
 write.csv(results, file = "age.at.fgm.csv")
 
+# Figures for ASRHR supplement --------------------------------------------
+
+setwd("G:/My Drive/2019/1- FGM/11- Ad hoc tasks/ARHR supplement")
+
+# Only keep latest survey
+data.latest <- survival_data %>%
+  filter(country == "Kenya" & year == 2014) 
+
+survival.curve <- survfit(Surv(as.numeric(time), as.numeric(fgm)==1) ~1, 
+                          data.latest,
+                          weight= as.numeric(re_wgt))
+
+survplot <- ggsurvplot(fit = survival.curve, data = survival_data, censor = F, conf.int =F,
+           fun = "cumhaz", legend = "none",
+           
+           font.title = c(18, "bold"),
+           font.x     = c(13), 
+           font.y     = c(13))+
+  labs(title = "Kenya - FGM risk at each year of life", 
+       subtitle = paste("Source:", data.latest$survey[1],data.latest$year[1]),
+       y = "Probability of experiencing FGM at a given age \n if no FGM up this age (cumulative hazard function)",
+       x = "Age of girl")
 
 
-
-
-
-
-
-
-
-
-
-
-
+ggsave(file = paste("Kenya.jpg"), print(survplot))
 
 
 
