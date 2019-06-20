@@ -121,7 +121,7 @@ g2 <- gtable_add_grob(g2,
 
 # Export figure 2a
 
-jpeg("Figure2a.jpg", width = 7.5, height = 5, units = 'in', res = 400)
+jpeg("Figure2a.jpg", width = 8.5, height = 5, units = 'in', res = 400)
 
 grid.arrange(g1, g2,  widths = 2:0.5, heights=unit(c(4.5,2), c("in", "mm")))
 
@@ -190,13 +190,13 @@ g2 <- gtable_add_grob(g2,
                       t = 1, l = 1, r = ncol(g2))
 # Export figure 2b
 
-jpeg("Figure2b.jpg", width = 7.5, height = 5, units = 'in', res = 400)
+jpeg("Figure2b.jpg", width = 8.5, height = 5, units = 'in', res = 400)
 
 grid.arrange(g1, g2,  ncol=2, heights=unit(c(4.5,2), c("in", "mm")), widths = c(1,0.5))
 
 dev.off()
 
-# Figure 6 a and b (Guinea and Kenya) ------------------------------------------
+# Figure 2 PAAPoster (Guinea and Kenya) ------------------------------------------
 
 data_for_plot <- survival_data %>%
   filter(country == "Guinea")
@@ -266,7 +266,7 @@ g2 <- ggplotGrob(curv_facet)
 
 # Export 
 
-jpeg("Figure6aandb.jpg", width = 7.5, height = 3.5, units = 'in', res = 400)
+jpeg("Figure2PAAPoster.jpg", width = 7.5, height = 3.5, units = 'in', res = 400)
 
 grid.arrange(g1, g2, nrow = 1, ncol = 2,   widths = c(0.75, 1))
 
@@ -392,7 +392,7 @@ plot <- arrange_ggsurvplots(plots[c(11,6,7,1,9,10,4,3,8,5,2)], ncol=3, nrow=4)
 ggsave("Figure4a.jpeg", plot, height = 10, dpi=450)
 
 
-# Figure 6a (Mauritania, Nigeria, Ethiopia) ------------------------------------------
+# Figure 5a (Mauritania, Nigeria, Ethiopia) ------------------------------------------
 
 data_for_plot <- survival_data %>%
   filter(country == "Ethiopia")
@@ -493,14 +493,14 @@ g3 <- ggplotGrob(curv_facet)
 
 # Export 
 
-jpeg("Figure6a.jpg", width = 7.5, height = 3.5, units = 'in', res = 400)
+jpeg("Figure5a.jpg", width = 7.5, height = 3.5, units = 'in', res = 400)
 
 grid.arrange(g1, g2, g3, nrow = 1, ncol = 3, widths = c(0.6,0.6,1))
 
 dev.off()
 
 
-# Figure 6b (Gambia,Guinea, Guinea-Bissau) ------------------------------------------
+# Figure 5b (Gambia,Guinea, Guinea-Bissau) ------------------------------------------
 
 data_for_plot <- survival_data %>%
   filter(country == "Gambia")
@@ -601,11 +601,12 @@ g3 <- ggplotGrob(curv_facet)
 
 # Export figure 2b
 
-jpeg("Figure6b.jpg", width = 7.5, height = 3.5, units = 'in', res = 400)
+jpeg("Figure5b.jpg", width = 7.5, height = 3.5, units = 'in', res = 400)
 
 grid.arrange(g1, g2, g3, nrow = 1, ncol = 3, widths = c(0.6,0.6,1))
 
 dev.off()
+
 # Figure 3 PAAPoster ------------------------------------------------------
 
 cohorts <- unique(survival_data$cohort10)
@@ -648,7 +649,7 @@ for(i in cohorts){
 plot <- arrange_ggsurvplots(plots[c(4,1,3,2)], ncol=2, nrow=2)
 #plot <- arrange_ggsurvplots(plots[c(6,3,5,1,4,2)], ncol=3, nrow=2)
 
-ggsave("Figure3_PAAPoster.jpeg", plot, height = 4, dpi=1200)
+ggsave("Figure3_PAAPoster.jpeg", plot, height = 9, dpi=2400)
 
 # National level -------------------------------------------------------------------
 
