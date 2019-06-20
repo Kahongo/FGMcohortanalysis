@@ -116,9 +116,22 @@ for (i in 1:length(listsav)){
                                     2, long_allchildren$G100)
   }
   
+  if(i == 5){ 
+    long_allchildren <- long_allchildren %>%
+      filter(as.numeric(G100) == 2) %>%
+      filter(as.numeric(B4) == 2) %>%
+      filter(as.numeric(B5) == 2) %>%
+      filter(as.numeric(B8) < 15) %>%
+      mutate(G121 = "No") %>%
+      mutate(G122 = NA) %>%
+      select(c("V000", "V001", "V002", "V005", "V007", "V008", "V021", "V022", "V023", "V024",
+               "V025", "B4", "B2", "B8", "B3", "G121", "G122", "G100", "G101")) 
+  }
+
+  if(i != 5){
   # non FGM birth recode
   long_allchildren <- long_allchildren %>%
-    filter(as.numeric(G100) == 1 ) %>%
+    filter(as.numeric(G100) == 1) %>%
     filter(as.numeric(B4) == 2) %>%
     filter(as.numeric(B5) == 2) %>%
     filter(as.numeric(B8) < 15) %>%
@@ -126,6 +139,7 @@ for (i in 1:length(listsav)){
     mutate(G122 = NA) %>%
     select(c("V000", "V001", "V002", "V005", "V007", "V008", "V021", "V022", "V023", "V024",
              "V025", "B4", "B2", "B8", "B3", "G121", "G122", "G100", "G101")) 
+  }
   
   # append to complete dataset
   df <- rbind(df, long_allchildren)
@@ -308,6 +322,7 @@ for (i in 1:length(listsav)){
 
 df_DHSd$survey <- "DHS" # add column of data source for later merge with MICS data
 
-saveRDS(df_DHSd, file = "survival_data_DHS_daughters_February2019.rds")
+setwd("G:/My Drive/2019/1- FGM/02- Trend estimates/FGMcohortanalysis/Datasets")
 
-setwd("C:/Users/weny/Google Drive/2018/FGM/02 -Trend modelling/FGM-trend-analysis/Codes")
+saveRDS(df_DHSd, file = "survival_data_DHS_daughters_July2019.rds")
+

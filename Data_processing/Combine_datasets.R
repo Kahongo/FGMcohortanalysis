@@ -7,26 +7,26 @@
 
 # File description, purpose of code, inputs and output --------------------
 
-DHS <- readRDS("C:/Users/weny/Google Drive/2018/FGM/02 -Trend modelling/01- Data/DHS/survival_data_DHS_February2019.rds", refhook = NULL)
-DHSd <- readRDS("C:/Users/weny/Google Drive/2018/FGM/02 -Trend modelling/01- Data/DHS/daugthers/survival_data_DHS_daughters_February2019.rds", refhook = NULL)
+DHS   <- readRDS("G:/My Drive/2019/1- FGM/02- Trend estimates/FGMcohortanalysis/Datasets/survival_data_DHS_July2019.rds", refhook = NULL)
+DHSd  <- readRDS("G:/My Drive/2019/1- FGM/02- Trend estimates/FGMcohortanalysis/Datasets/survival_data_DHS_daughters_July2019.rds", refhook = NULL)
 
-MICS <- readRDS("C:/Users/weny/Google Drive/2018/FGM/02 -Trend modelling/01- Data/MICS/survival_data_MICS_February2019.rds", refhook = NULL)
-MICSd <- readRDS("C:/Users/weny/Google Drive/2018/FGM/02 -Trend modelling/01- Data/MICS/daughters/survival_data_MICS_daughters_February2019.rds", refhook = NULL)
+MICS  <- readRDS("G:/My Drive/2019/1- FGM/02- Trend estimates/FGMcohortanalysis/Datasets/survival_data_MICS_July2019.rds", refhook = NULL)
+MICSd <- readRDS("G:/My Drive/2019/1- FGM/02- Trend estimates/FGMcohortanalysis/Datasets/survival_data_MICS_daughters_July2019.rds", refhook = NULL)
 
 # MICS datasets -----------------------------------------------------------
 
 MICS <- dplyr::bind_rows(dplyr::mutate_all(MICSd, as.character), 
-                         dplyr::mutate_all(MICS, as.character)) # n 432 255 muhahahahaha
+                         dplyr::mutate_all(MICS, as.character)) 
 
 # DHS datasets ------------------------------------------------------------
 
 DHS <- dplyr::bind_rows(dplyr::mutate_all(DHSd, as.character), 
-                        dplyr::mutate_all(DHS, as.character)) # seems to have n 747 235
+                        dplyr::mutate_all(DHS, as.character)) 
 
 # Full dataset ------------------------------------------------------------
 
 data <- dplyr::bind_rows(dplyr::mutate_all(MICS, as.character), 
-                         dplyr::mutate_all(DHS, as.character)) # 1 928 836
+                         dplyr::mutate_all(DHS, as.character)) 
 
 data$time <- ifelse(data$time == 99 | data$time == 98, NA, data$time)
 
@@ -35,7 +35,7 @@ data$time <- ifelse(data$time == 99 | data$time == 98, NA, data$time)
 data1 <- data %>%
   filter(!is.na(fgm)) %>%
   group_by(as.numeric(age_years)) %>%
-  mutate(new = n())
+  dplyr::mutate(new = n())
 
 data_na_fgmage <- data1 %>%
   filter(fgm == 1)%>%
@@ -45,7 +45,7 @@ data_na_fgmage$age_years<- as.factor(data_na_fgmage$age_years)
 data_na_fgmage$age_years = factor(data_na_fgmage$age_years,levels(data_na_fgmage$age_years)[c(1:2,13,24,35,46:50,3:12,14:23,25:34,36:45)]) 
 
 data_na_fgmage <- data_na_fgmage %>%
-  mutate(new1 = n())
+  dplyr::mutate(new1 = n())
 
 data_na_fgmage <- data_na_fgmage %>%
   mutate(percentage = new1/new )
@@ -94,7 +94,7 @@ data <- data %>%
 
 df <- data 
 
-setwd("C:/Users/weny/Google Drive/2018/FGM/02 -Trend modelling/01- Data")
+setwd("G:/My Drive/2019/1- FGM/02- Trend estimates/FGMcohortanalysis/Datasets")
 
 saveRDS(df, file = "survival_data_February2019.rds")
 

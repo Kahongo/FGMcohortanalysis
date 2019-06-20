@@ -22,7 +22,7 @@
 
 # The data has been downloaded from INSERT MICS SOURCE
 
-setwd("C:/Users/weny/Google Drive/2018/FGM/02 -Trend modelling/01- Data/MICS/daughters")
+setwd("G:/My Drive/2018/FGM/02 -Trend modelling/01- Data/MICS/daughters")
 
 # Executed statements ----------------------------------------------------------
 
@@ -1422,6 +1422,6 @@ names(df_MICSd) <- c("country",
 
 df_MICSd$survey <- "MICS" 
 
-saveRDS(df_MICSd, file = "survival_data_MICS_daughters_February2019.rds")
+setwd("G:/My Drive/2019/1- FGM/02- Trend estimates/FGMcohortanalysis/Datasets")
+saveRDS(df_MICSd, file = "survival_data_MICS_daughters_July2019.rds")
 
-setwd("C:/Users/weny/Google Drive/2018/FGM/02 -Trend modelling/FGM-trend-analysis/Codes")

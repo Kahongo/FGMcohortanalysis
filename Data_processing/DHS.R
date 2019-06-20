@@ -1048,7 +1048,9 @@ for(i in 1:length(listsav)){
 df_DHS$survey <- "DHS" # add column of data source for later merge with MICS data
 
 # save dataset
-saveRDS(df_DHS, file = "survival_data_DHS_February2019.rds")
+setwd("G:/My Drive/2019/1- FGM/02- Trend estimates/FGMcohortanalysis/Datasets")
 
-setwd("C:/Users/weny/Google Drive/2018/FGM/02 -Trend modelling/FGM-trend-analysis/Codes")
+saveRDS(df_DHS, file = "survival_data_DHS_July2019.rds")
+
+
 

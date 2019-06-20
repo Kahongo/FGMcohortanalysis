@@ -2124,7 +2124,9 @@ df_MICS$time <- as.numeric(df_MICS$time) # weights need to be numeric
 df_MICS$re_wgt <- as.numeric(df_MICS$re_wgt) # weights need to be numeric
 df_MICS$fgm <- as.numeric(df_MICS$fgm) # weights need to be numeric
 
-saveRDS(df_MICS, file = "survival_data_MICS_February2019.rds")
 
-setwd("C:/Users/weny/Google Drive/2018/FGM/02 -Trend modelling/FGM-trend-analysis/Codes")
+setwd("G:/My Drive/2019/1- FGM/02- Trend estimates/FGMcohortanalysis/Datasets")
+saveRDS(df_MICS, file = "survival_data_MICS_July2019.rds")
+
+
 
