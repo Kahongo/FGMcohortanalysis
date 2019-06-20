@@ -862,7 +862,7 @@ a <- as.data.frame(attr(tmp, "variable.labels"))
 #table(tmp$FG1) # Knows of FGM
 #table(tmp$FG2) # Knows of FGM (probed)
 
-tmp$FG1 <- ifelse(tmp$FG1 == "Yes" | tmp$FG2 == "Yes", "Yes", "No")
+tmp$FG1 <- ifelse(tmp$FG1 == "Sim" | tmp$FG2 == "Sim", "Yes", "No")
 
 #Select variables
 tmp <- tmp %>%
@@ -918,11 +918,11 @@ tmp <- tmp %>%
 
 # recode fgm
 
-tmp$fgm_know <- ifelse(tmp$fgm_know == "N?o", tmp$fgm_know == 0, 
+tmp$fgm_know <- ifelse(tmp$fgm_know == "Não", tmp$fgm_know == 0, 
                        ifelse(tmp$fgm_know == "Sim", 1, NA))
 
 tmp$fgm <- ifelse(tmp$fgm == "Sim",  1,
-                  ifelse(tmp$fgm == "N?o" , 0, NA))
+                  ifelse(tmp$fgm == "Não" , 0, NA))
 
 tmp$fgm <- ifelse(is.na(tmp$fgm) & (tmp$fgm_know == 0), 0, tmp$fgm)
 

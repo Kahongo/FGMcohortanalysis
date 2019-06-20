@@ -11,7 +11,7 @@ memory.limit(size=56000)
 
 # Set up data set ------------------------------------------
 
-survival_data <- readRDS("G:/My Drive/2018/FGM/02 -Trend modelling/01- Data/survival_data_February2019.rds", refhook = NULL)
+survival_data <- readRDS("G:/My Drive/2019/1- FGM/02- Trend estimates/FGMcohortanalysis/Datasets/survival_data_July2019.rds", refhook = NULL)
 
 survey1 <- survival_data %>%
   filter(!is.na(fgm)) %>%
@@ -46,6 +46,42 @@ survey <-      svydesign(id             = ~cluster_number_unique,
                          weight         = ~re_wgt,
                          data           = survey1, 
                          nest           = T)
+
+
+# Logrank -----------------------------------------------------------------
+
+options(scipen = 1) # turn on scientific notation
+
+year.5        <- svylogrank(Surv(time, fgm==1)~ cohort5, survey, method=c("large"))
+year.5
+
+year.10       <- svylogrank(Surv(time, fgm==1)~ cohort10, survey, method=c("large"))
+year.10
+
+survey1.rural <- survey1 %>%
+  filter(residence == "Rural")
+
+survey.rural <-      svydesign(id             = ~cluster_number_unique, 
+                         strata         = ~strata_unique, 
+                         weight         = ~re_wgt,
+                         data           = survey1.rural, 
+                         nest           = T)
+
+year.5.rural  <- svylogrank(Surv(time, fgm==1)~ cohort5, survey.rural , method=c("large"))
+year.5.rural
+
+survey1.urban <- survey1 %>%
+  filter(residence == "Urban")
+
+survey.urban <-      svydesign(id             = ~cluster_number_unique, 
+                               strata         = ~strata_unique, 
+                               weight         = ~re_wgt,
+                               data           = survey1.urban, 
+                               nest           = T)
+
+year.5.urban <- svylogrank(Surv(time, fgm==1)~ cohort5, survey.urban, method=c("large"))
+year.5.urban
+
 # Logistic regression -----------------------------------------------------
 
 # Model A: Logistic model with interaction on year and country 

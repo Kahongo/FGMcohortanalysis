@@ -13,7 +13,7 @@ setwd("G:/My Drive/2019/1- FGM/02- Trend estimates/PaperI/Visualizations")
 
 # Load data ---------------------------------------------------------------
 
-survival_data <- readRDS("G:/My Drive/2018/FGM/02 -Trend modelling/01- Data/survival_data_February2019.rds", refhook = NULL)
+survival_data <- readRDS("G:/My Drive/2019/1- FGM/02- Trend estimates/FGMcohortanalysis/Datasets/survival_data_July2019.rds", refhook = NULL)
 
 survival_data$re_wgt <- as.numeric(survival_data$re_wgt) # weights need to be numeric
 survival_data$time <- as.numeric(survival_data$time) # weights need to be numeric
@@ -59,6 +59,8 @@ survival_data <- survival_data %>%
 # 11 observations where age at cutting > than age of girl in years
 survival_data <- survival_data%>%
   filter(as.numeric(time) <= as.numeric(age_years))
+
+setwd("G:/My Drive/2019/1- FGM/02- Trend estimates/Visualizations")
 
 # Figure 2a (10-year age cohorts) -----------------------------------------
 
@@ -652,7 +654,7 @@ ggsave("Figure3_PAAPoster.jpeg", plot, height = 4, dpi=1200)
 
 # Export for Annex A ---------------------------------------------
 
-setwd("C:/Users/weny/Google Drive/2019/1- FGM/02- Trend estimates/Visualizations/Annex A")
+setwd("G:/My Drive/2019/1- FGM/02- Trend estimates/Visualizations")
 
 countries <- unique(survival_data$country)
 

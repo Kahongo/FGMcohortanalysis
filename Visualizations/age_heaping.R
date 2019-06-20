@@ -18,7 +18,7 @@ library(DDM)
 library(devtools)
 library(Pyramid)
 
-survival_data <- readRDS("C:/Users/weny/Google Drive/2018/FGM/02 -Trend modelling/01- Data/survival_data_February2019.rds", refhook = NULL)
+survival_data <- readRDS("G:/My Drive/2019/1- FGM/02- Trend estimates/FGMcohortanalysis/Datasets/survival_data_July2019.rds", refhook = NULL)
 
 survival_data$re_wgt <- as.numeric(survival_data$re_wgt) # weights need to be numeric
 survival_data$time <- as.numeric(survival_data$time) # weights need to be numeric
@@ -71,7 +71,7 @@ plot_data$time <- as.numeric(as.character(plot_data$time))
 ggplot(plot_data , aes(time, new, fill = fgm)) +     
   geom_col() +
   scale_y_continuous(name = "Count (thousands)", labels = function(y) y / 1000)+
-  scale_x_continuous(breaks = seq(0,49, by =5))+
+  scale_x_continuous(breaks = seq(0,50, by =5))+
   
   theme_bw(base_size = 32) +
   
