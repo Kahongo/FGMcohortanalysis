@@ -799,7 +799,7 @@ for(i in list.countries){
     guides(color = guide_legend(reverse = TRUE))
   
   ggsave(file = paste(i, ".pdf"), print(survplot), onefile=FALSE)
-  
+  ggsave(file = paste(i, ".svg"))
 }
 
 # Age at FGM
@@ -907,5 +907,75 @@ ggsave(file = paste("Kenya.jpg"), print(survplot))
 
 
 
+# Age at FGM for Annual report --------------------------------------------
 
+setwd("G:/My Drive/2019/1- FGM/11- Ad hoc tasks/Annual report/Age-At-FGM")
 
+# Only keep latest survey
+survival_data <- survival_data %>%
+  filter(country == "Burkina Faso" |
+         country == "Egypt" |
+         country == "Kenya" | 
+         country == "Senegal" |
+         country == "Sudan" |
+         country == "Nigeria" |
+         country == "Ethiopia")
+
+list.countries <- c("Burkina Faso", "Egypt", "Kenya", "Senegal", "Sudan", "Nigeria", "Ethiopia")
+list.cohorts   <- unique(survival_data$cohort10)
+
+for(j in list.cohorts){
+
+results        <- matrix(,nrow=0, ncol =3)
+colnames(results) <- c("Age at which 25% of girls (who experience FGM) are cut", 
+                       "Age at which 50% of girls (who experience FGM) are cut", 
+                       "Age at which 75% of girls (who experience FGM) are cut")
+data <- survival_data %>%
+  filter(cohort10 == j)
+
+for(i in list.countries){
+
+  data.country <- data %>%
+    filter(country == i) %>%
+    filter(fgm >0) 
+  
+if(nrow(data.country)  != 0){
+  
+  surv.object <- survfit(Surv(as.numeric(time), as.numeric(fgm)==1) ~1, 
+                      data.country,
+                      weight= as.numeric(re_wgt))
+  
+  mc <- data.frame(q = c(.25, .5, .75),
+                   km = quantile(surv.object))
+  
+  survplot <- ggsurvplot(surv.object, xlab = "Time (years)", ylab = "Cumulative event",
+                         censor = F, data, palette = "brown", conf.int = F, fun = "event",
+                         font.title=c(24, "bold", "brown"),
+                         xlim=c(0,20))$plot +
+    geom_segment(data = mc, aes(x = km.quantile, y = 1-q, xend = km.quantile, yend = 0), lty = 2) +
+    geom_segment(data = mc, aes(x = 0, y = 1-q, xend = km.quantile, yend = 1-q), lty = 2) +
+    scale_x_continuous(breaks = seq(0, 20, 1))+
+    
+    labs(title = i, subtitle = paste("Latest survey:", data.country$survey[1], data.country$year[1], ", Cohort:", j))+
+    
+    theme(legend.position = "none", plot.subtitle = element_text(size = 8))
+  
+  ggsave(file = paste(i,j, ".pdf"), print(survplot), onefile=FALSE)
+  
+  temp.results <- as.numeric(quantile(surv.object)$quantile)
+  
+  results <- rbind(results, temp.results)
+ }
+  
+ if(nrow(data.country) == 0){
+   temp.results <- matrix("Not available",nrow=1, ncol =3)
+   results <- rbind(results, temp.results)
+ }
+   
+}
+
+rownames(results) <- list.countries
+
+write.csv(results, file = paste(j,".csv"))
+
+}
