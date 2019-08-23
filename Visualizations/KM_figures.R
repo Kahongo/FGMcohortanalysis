@@ -808,7 +808,7 @@ setwd("G:/My Drive/2019/1- FGM/05- Country profiles/Age at FGM")
 
 # Only keep latest survey
 data.latest <- survival_data %>%
-      filter((country == "Burkina Faso" & year == 2010) |
+      dplyr::filter((country == "Burkina Faso" & year == 2010) |
             (country == "Nigeria" & (year == 2017 | year == 2016)) |
             (country == "Senegal" & year == 2017) | 
             (country == "Egypt" & year == 2015) |
@@ -823,7 +823,6 @@ data.latest <- survival_data %>%
             (country == "Guinea" | year == 2016) |
             (country == "Guinea-Bissau" | year == 2014)|
             (country == "Iraq" | year == 2011) |
-            (country == "Kenya" | year == 2014)|
             (country == "Mali" | year == 2015) |
             (country == "Niger" | year == 2012) |
             (country == "Nigeria" | year == 2017) |
@@ -832,7 +831,8 @@ data.latest <- survival_data %>%
             (country == "United Republic of Tanzania" | (year == 2015 | year == 2016)) |
             (country == "Togo" | (year == 2013 | year == 2014))|
             (country == "Yemen" | year == 2013)|
-            (country == "Chad" | (year == 2014 | year == 2015)))
+            (country == "Chad" | (year == 2014 | year == 2015)) |
+            (country == "Mauritania" | year == 2015))
 
 list.countries <- c("Benin", "Burkina Faso", "Central African Republic",
                     "Chad", "Cote d'Ivoire", "Egypt", "Ethiopia", 
@@ -875,6 +875,45 @@ for(i in list.countries){
   results <- rbind(results, temp.results)
  
 }
+
+# Single figure
+
+survplots <- list()
+
+for(i in list.countries){
+  
+  data <- data.latest %>%
+    filter(country == i) %>%
+    filter(fgm >0) 
+  
+  survival.curve <- survfit(Surv(as.numeric(time), as.numeric(fgm)==1) ~1, 
+                            data,
+                            weight= as.numeric(re_wgt))
+  
+  mc <- data.frame(q = c(.25, .5, .75),
+                   km = quantile(survival.curve))
+  
+  plot <- ggsurvplot(survival.curve, xlab = "Time (years)", ylab = "Cumulative event",
+                         censor = F, data, palette = "brown", conf.int = F, 
+                         font.title=c(24, "bold", "brown"),
+                         xlim=c(0,20))$plot +
+    geom_segment(data = mc, aes(x = km.quantile, y = 1-q, xend = km.quantile, yend = 0), lty = 2) +
+    geom_segment(data = mc, aes(x = 0, y = 1-q, xend = km.quantile, yend = 1-q), lty = 2) +
+    scale_x_continuous(breaks = seq(0, 20, 1))+
+    
+    labs(title = data$country[1], subtitle = paste("Source:", data$survey[1],data$year[1]))+
+    
+    theme(legend.position = "none", plot.subtitle = element_text(size = 8))
+
+  survplots[[i]] <- plot
+  
+}
+
+survplots <- survplots[order(names(survplots))]
+
+plot <- arrange_ggsurvplots(survplots[[1,1]])
+
+ggsave("Figure4a.jpeg", plot, height = 10, dpi=450)
 
 names(results) <- c("country", "25% cut", "50% cut", "75% cut")
 write.csv(results, file = "age.at.fgm.csv")
