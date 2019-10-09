@@ -70,6 +70,7 @@ data_for_plot <- survival_data
 cohort10 <- survfit(Surv(as.numeric(time), as.numeric(fgm)==1) ~cohort10 , data=data_for_plot ,
                     weight= as.numeric(re_wgt))
 
+# Lancet format
 figure2a.curve <- ggsurvplot(fit = cohort10, data = survival_data, censor = F,
                              legend.title = "Cohort born...", legend=c(0.85, 0.25),
                              font.legend = c(13, "plain", "black"), #alpha = "strata", 
@@ -127,14 +128,49 @@ grid.arrange(g1, g2,  widths = 2:0.5, heights=unit(c(4.5,2), c("in", "mm")))
 
 dev.off()
 
+# Plos ONE format
+
+setwd("G:/My Drive/2019/1- FGM/02- Trend estimates/PaperI/Visualizations/TIFF versions")
+
+tiff("Fig 2A.Survival curves for 10-year age cohorts show decline in FGM risk from the 2000s.tif", 
+     units="in", width=4, height=3.5, res=300)
+
+ggsurvplot(fit = cohort10, data = survival_data, censor = F,
+           legend.title = "Cohort born...", legend=c("right"),
+           font.legend = c(6, "plain", "black"), size = 0.5,
+           font.tickslab = c(6, "plain", "black"),
+           
+           font.x     = c(8), 
+           font.y     = c(8),
+           
+           palette = c("midnightblue", 
+                       "royalblue1", "mediumorchid4", "maroon4", 
+                       "firebrick3",
+                       "firebrick1"),
+           
+           legend.labs = c("1960 -1969",
+                           "1970 -1979",
+                           "1980 -1989",
+                           "1990 -1999", 
+                           "2000 -2009", 
+                           "after 2009"),
+           
+           ylab = "Probabily of not experiencing FGM", 
+           xlab = "Time in years of life") +
+  guides(color = guide_legend(reverse = TRUE))
+dev.off()
 
 # Figure 2b (5-year age cohorts) ------------------------------------------
+
+setwd("G:/My Drive/2019/1- FGM/02- Trend estimates/Visualizations")
 
 # Create visualization
 data_for_plot <- survival_data
 
 cohort5 <- survfit(Surv(as.numeric(time), as.numeric(fgm)==1) ~cohort5 , data=data_for_plot,
                    weight= as.numeric(re_wgt))
+
+# Lancet format
 
 figure2b.curve <-ggsurvplot(fit = cohort5, data = survival_data, censor = F,
                             legend.title = "Cohort born...", legend=c("right"),
@@ -193,6 +229,44 @@ g2 <- gtable_add_grob(g2,
 jpeg("Figure2b.jpg", width = 8.5, height = 5, units = 'in', res = 400)
 
 grid.arrange(g1, g2,  ncol=2, heights=unit(c(4.5,2), c("in", "mm")), widths = c(1,0.5))
+
+dev.off()
+
+# Plos ONE format
+
+setwd("G:/My Drive/2019/1- FGM/02- Trend estimates/PaperI/Visualizations/TIFF versions")
+
+tiff("Fig 2B.Survival curves for 5-year age cohorts show decline in FGM risk from the late 1990s.tif", 
+     units="in", width=4, height=3.5, res=300)
+
+ggsurvplot(fit = cohort5, data = survival_data, censor = F,
+           legend.title = "Cohort born...", legend=c("right"),
+           font.legend = c(6, "plain", "black"), size = 0.5,
+           font.tickslab = c(6, "plain", "black"), 
+           
+           font.x     = c(8), 
+           font.y     = c(8),
+           
+           
+           palette = c("midnightblue", "blue4", "blue3", "blue1",
+                       "royalblue1", "mediumorchid4", "maroon4", 
+                       "firebrick4","firebrick3","firebrick2",
+                       "firebrick1"),
+           
+           legend.labs = c("1960 -1964",
+                           "1965 -1969",
+                           "1970 -1974",
+                           "1975 -1979",
+                           "1980 -1984",
+                           "1985 -1989",
+                           "1990 -1994",
+                           "1995 -1999",
+                           "2000 -2004",
+                           "2005 -2009",
+                           "after 2009"),
+           ylab = "Probabily of not experiencing FGM", 
+           xlab = "Time in years of life") +
+  guides(color = guide_legend(reverse = TRUE))
 
 dev.off()
 
@@ -274,6 +348,8 @@ dev.off()
 
 # Figure 3 a and b (Rural vs Urban) ------------------------------------------
 
+# Lancet format
+
 data_for_plot <- survival_data %>%
   filter(residence == "Urban")
 
@@ -315,8 +391,6 @@ data_for_plot$cohort5 <- factor(data_for_plot$cohort5)
 cohort5 <- survfit(Surv(as.numeric(time), as.numeric(fgm)==1) ~cohort5 , data=data_for_plot,
                    weight= as.numeric(re_wgt))
 
-legend.names <- levels(data_for_plot$cohort5)
-
 plot<- ggsurvplot(fit = cohort5, data = survival_data, censor = F,
                   legend.title = "Women/girls born in...", legend=c("right"),
                   font.legend = c(10, "plain", "black"), #alpha = "strata", 
@@ -348,6 +422,83 @@ grid.arrange(g1, g2, nrow = 1, ncol = 2,   widths = c(0.75, 1))
 
 dev.off()
 
+# Plos ONE format
+
+setwd("G:/My Drive/2019/1- FGM/02- Trend estimates/PaperI/Visualizations/TIFF versions")
+
+data_for_plot <- survival_data %>%
+  filter(residence == "Urban")
+
+data_for_plot$cohort5 <- factor(data_for_plot$cohort5)
+
+cohort5 <- survfit(Surv(as.numeric(time), as.numeric(fgm)==1) ~cohort5 , data=data_for_plot,
+                   weight= as.numeric(re_wgt))
+
+legend.names <- levels(data_for_plot$cohort5)
+
+plot<- ggsurvplot(fit = cohort5, data = survival_data, censor = F,
+                  legend= "none",
+                  font.legend = c(6, "plain", "black"), #alpha = "strata", 
+                  
+                  size = 0.4,
+                  
+                  font.x     = c(8), 
+                  font.y     = c(8),
+                  
+                  palette = c("midnightblue", "blue4", "blue3", "blue1",
+                              "royalblue1", "mediumorchid4", "maroon4", 
+                              "firebrick4","firebrick3","firebrick2",
+                              "firebrick1"),
+                  
+                  ylab = "Probabily of not experiencing FGM", 
+                  xlab = "Time in years of life", 
+                  #title="Urban areas", 
+                  font.tickslab = c(6, "plain", "black")) +
+  guides(color = guide_legend(reverse = TRUE))
+
+curv_facet <- plot$plot
+g1 <- ggplotGrob(curv_facet)
+
+
+data_for_plot <- survival_data %>%
+  filter(residence == "Rural")
+
+data_for_plot$cohort5 <- factor(data_for_plot$cohort5)
+
+cohort5 <- survfit(Surv(as.numeric(time), as.numeric(fgm)==1) ~cohort5 , data=data_for_plot,
+                   weight= as.numeric(re_wgt))
+
+plot<- ggsurvplot(fit = cohort5, data = survival_data, censor = F,
+                  legend.title = "Women/girls born in...", legend=c("right"),
+                  font.legend = c(6, "plain", "black"), #alpha = "strata", 
+                  size = 0.4,
+                  
+                  font.x     = c(8), 
+                  font.y     = c(8),
+                  
+                  palette = c("midnightblue", "blue4", "blue3", "blue1",
+                              "royalblue1", "mediumorchid4", "maroon4", 
+                              "firebrick4","firebrick3","firebrick2",
+                              "firebrick1"),
+                  
+                  legend.labs = legend.names,
+                  
+                  ylab = "Probabily of not experiencing FGM", 
+                  xlab = "Time in years of life", 
+                  #title = "Rural areas",
+                  font.tickslab = c(6, "plain", "black")) +
+  guides(color = guide_legend(reverse = TRUE))
+
+
+curv_facet <- plot$plot
+g2 <- ggplotGrob(curv_facet)
+
+tiff("Fig 3. Faster decline in FGM is observed in urban compared to rural areas.tif", 
+     units="in", width=6.5, height=3.5, res=300)
+
+grid.arrange(g1, g2, nrow = 1, ncol = 2,   widths = c(0.7, 1))
+
+dev.off()
 
 # Figure 4 a- k -----------------------------------------------------------
 
@@ -381,6 +532,28 @@ for(i in cohorts){
                     ylab = "Probabily of not experiencing FGM", 
                     xlab = "Time in years of life", font.tickslab = c(6, "plain", "black"))
   
+  if(i == "after 2009"){
+    
+    plot<- ggsurvplot(fit = cohort5, data = data_for_plot, censor = F,
+                      title = paste("Born",i), legend=c(1.5,1), legend.title ="",
+                      
+                      size = 0.4,
+                      
+                      font.title = c(8, "bold"),
+                      font.x     = c(8), 
+                      font.y     = c(8),
+                      
+                      legend.labs = c("Rural", "Urban"),
+                      
+                      palette = c("midnightblue", "firebrick3"),
+                      
+                      xlim = c(0,50),
+                      
+                      ylab = "Probabily of not experiencing FGM", 
+                      xlab = "Time in years of life", font.tickslab = c(6, "plain", "black"))
+    
+  }
+  
   
   plots[[i]] <- plot
   
@@ -391,8 +564,77 @@ plot <- arrange_ggsurvplots(plots[c(11,6,7,1,9,10,4,3,8,5,2)], ncol=3, nrow=4)
 
 ggsave("Figure4a.jpeg", plot, height = 10, dpi=450)
 
+# PloS ONE format
+
+setwd("G:/My Drive/2019/1- FGM/02- Trend estimates/PaperI/PlosOne submission October 2019/TIFF versions")
+
+tiff("Fig 4. FGM dynamics by 5-year cohorts show increasing discrepancy between rural and  urban areas.tif", 
+     units="in", width=7.5, height=10, res=300)
+
+plots <- list()
+
+for(i in cohorts){
+  
+  data_for_plot <- survival_data %>%
+    filter(cohort5 == i)
+  
+  
+  cohort5 <- survfit(Surv(as.numeric(time), as.numeric(fgm)==1) ~residence , data=data_for_plot,
+                     weight= as.numeric(re_wgt))
+  
+  plot<- ggsurvplot(fit = cohort5, data = data_for_plot, censor = F,
+                    title = paste("Born",i),
+                    legend=c("none"),
+                    
+                    size = 0.4,
+                    
+                    font.title = c(8, "bold"),
+                    font.x     = c(8), 
+                    font.y     = c(8),
+                    
+                    legend.labs = c("Rural", "Urban"),
+                    
+                    palette = c("midnightblue", "firebrick3"),
+                    
+                    xlim = c(0,50),
+                    
+                    ylab = "Probabily of not experiencing FGM", 
+                    xlab = "Time in years of life", font.tickslab = c(6, "plain", "black"))
+  
+  if(i == "after 2009"){
+    
+    plot<- ggsurvplot(fit = cohort5, data = data_for_plot, censor = F,
+                      legend=c(1.5,1), legend.title ="",
+                      
+                      size = 0.4,
+                      
+                      font.x     = c(8), 
+                      font.y     = c(8),
+                      
+                      legend.labs = c("Rural", "Urban"),
+                      
+                      palette = c("midnightblue", "firebrick3"),
+                      
+                      xlim = c(0,50),
+                      
+                      ylab = "Probabily of not experiencing FGM", 
+                      xlab = "Time in years of life", font.tickslab = c(6, "plain", "black"))
+    
+  }
+  
+  
+  plots[[i]] <- plot
+  
+  
+}
+
+arrange_ggsurvplots(plots[c(11,6,7,1,9,10,4,3,8,5,2)], ncol=3, nrow=4)
+
+dev.off()
 
 # Figure 5a (Mauritania, Nigeria, Ethiopia) ------------------------------------------
+
+# Lancet format
 
 data_for_plot <- survival_data %>%
   filter(country == "Ethiopia")
@@ -499,8 +741,20 @@ grid.arrange(g1, g2, g3, nrow = 1, ncol = 3, widths = c(0.6,0.6,1))
 
 dev.off()
 
+# PloS ONE format
+
+setwd("G:/My Drive/2019/1- FGM/02- Trend estimates/PaperI/PlosOne submission October 2019/TIFF versions")
+
+tiff("Fig 5A. Decline in FGM risk in Ethiopia, Mauritania and Kenya.tif", 
+     units="in", width=7.5, height=3.5, res=300)
+
+grid.arrange(g1, g2, g3, nrow = 1, ncol = 3, widths = c(0.6,0.6,1))
+
+dev.off()
 
 # Figure 5b (Gambia,Guinea, Guinea-Bissau) ------------------------------------------
+
+# Lancet format
 
 data_for_plot <- survival_data %>%
   filter(country == "Gambia")
@@ -607,6 +861,17 @@ grid.arrange(g1, g2, g3, nrow = 1, ncol = 3, widths = c(0.6,0.6,1))
 
 dev.off()
 
+# Plos ONE format
+
+setwd("G:/My Drive/2019/1- FGM/02- Trend estimates/PaperI/Visualizations/TIFF versions")
+
+tiff("Fig 5B. Lack of decline in FGM risk in Gambia, Guinea and Guinea-Bissau.tif", 
+     units="in", width=7.5, height=3.5, res=300)
+
+grid.arrange(g1, g2, g3, nrow = 1, ncol = 3, widths = c(0.6,0.6,1))
+
+dev.off()
+
 # Figure 3 PAAPoster ------------------------------------------------------
 
 cohorts <- unique(survival_data$cohort10)
@@ -658,6 +923,8 @@ ggsave("Figure3_PAAPoster.jpeg", plot, height = 9, dpi=2400)
 setwd("G:/My Drive/2019/1- FGM/02- Trend estimates/Visualizations")
 
 countries <- unique(survival_data$country)
+
+# Lancet format
 
 plots <- list()
 
@@ -711,6 +978,82 @@ arrange_ggsurvplots(plots[21:24],  ncol = 2, nrow = 2)
 
 dev.off()
 
+
+# Plos ONE format
+
+setwd("G:/My Drive/2019/1- FGM/02- Trend estimates/PaperI/PlosOne submission October 2019/TIFF versions")
+
+countries <- unique(survival_data$country)
+
+plots <- list()
+
+for(i in countries){
+  
+  data_for_plot <- survival_data %>%
+    filter(country == i)
+  
+  data_for_plot$cohort5 <- factor(data_for_plot$cohort5)
+  
+  cohort5 <- survfit(Surv(as.numeric(time), as.numeric(fgm)==1) ~cohort5 , data=data_for_plot,
+                     weight= as.numeric(re_wgt))
+  
+  legend.names <- levels(data_for_plot$cohort5)
+  
+  plot<- ggsurvplot(fit = cohort5, data = survival_data, censor = F,
+                    legend.title = "Women/girls born in...", legend=c("right"),
+                    font.legend = c(6, "plain", "black"), #alpha = "strata", 
+                    size = 0.4,
+                    title = paste(i), font.title = c(10, "bold"),
+                    
+                    font.x     = c(8), 
+                    font.y     = c(8),
+                    
+                    palette = c("midnightblue", "blue4", "blue3", "blue1",
+                                "royalblue1", "mediumorchid4", "maroon4", 
+                                "firebrick4","firebrick3","firebrick2",
+                                "firebrick1"),
+                    
+                    legend.labs = legend.names,
+                    
+                    ylab = "Probabily of not experiencing FGM", 
+                    xlab = "Time in years of life", font.tickslab = c(6, "plain", "black")) +
+    guides(color = guide_legend(reverse = TRUE))
+  
+  plots[[i]] <- plot
+  
+}
+
+plots <- plots[order(names(plots))]
+
+tiff("S1 Fig Country-level results - Benin, Cameroon, Burkina Faso and Central African Republic.tif", 
+     units="in", width=7.5, height=10, res=300)
+arrange_ggsurvplots(plots[1:4],  ncol = 2, nrow = 2)
+dev.off()
+
+tiff("S2 Fig. Country-level results - Chad, Egypt, Côte d’Ivoire, Ethiopia.tif", 
+     units="in", width=7.5, height=10, res=300)
+arrange_ggsurvplots(plots[5:8],  ncol = 2, nrow = 2)
+dev.off()
+
+tiff("S3 Fig. Country-level results - Gambia, Guinea, Ghana, Guinea-Bissau.tif", 
+     units="in", width=7.5, height=10, res=300)
+arrange_ggsurvplots(plots[9:12],  ncol = 2, nrow = 2)
+dev.off()
+
+tiff("S4 Fig. Country-level results - Iraq, Mali, Kenya, Mauritania.tif", 
+     units="in", width=7.5, height=10, res=300)
+arrange_ggsurvplots(plots[13:16],  ncol = 2, nrow = 2)
+dev.off()
+
+tiff("S5 Fig. Country-level results - Niger, Senegal, Nigeria, Sierra Leone.tif", 
+     units="in", width=7.5, height=10, res=300)
+arrange_ggsurvplots(plots[17:20],  ncol = 2, nrow = 2)
+dev.off()
+
+tiff("S6 Fig. Country-level results - Sudan, United Republic of Tanzania, Togo, Yemen.tif", 
+     units="in", width=7.5, height=10, res=300)
+arrange_ggsurvplots(plots[21:24],  ncol = 2, nrow = 2)
+dev.off()
 
 # Export for country profiles ------------------------------------------------------
 
